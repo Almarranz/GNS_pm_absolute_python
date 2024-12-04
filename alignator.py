@@ -25,7 +25,7 @@ def alignator(survey,gns,gaia,s_ls, d_m,max_deg):
     dic_xy = {} 
     dic_xy['trans_0'] = np.array([gns[id1],gns[id2]]).T
     # for loop in range(1,10):
-    sig_cl = 10#!!!
+    sig_cl = 3#!!!
     print('Encima del while')
     while deg < max_deg:
         
@@ -41,31 +41,34 @@ def alignator(survey,gns,gaia,s_ls, d_m,max_deg):
         
         
         
-        fig, (ax,ax1)  = plt.subplots(1,2)
-        ax1.set_title(f'GNS{survey}. Degree = %s'%(deg))
-        ax.set_title(f'Loop = {loop-1}. Matching stars = {len(s_ls)}')
-        ax.hist(diff_x, histtype = 'step', label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_x),np.std(diff_x)))
-        ax.axvline(lx_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
-        ax.axvline(hx_lim, color = 'red', ls = 'dashed')
-        ax1.axvline(ly_lim, color = 'red', ls = 'dashed')
-        ax1.axvline(hy_lim, color = 'red', ls = 'dashed')
+        # fig, (ax,ax1)  = plt.subplots(1,2)
+        # ax1.set_title(f'GNS{survey}. Degree = %s'%(deg))
+        # ax.set_title(f'Loop = {loop-1}. Matching stars = {len(s_ls)}')
+        # ax.hist(diff_x, histtype = 'step', label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_x),np.std(diff_x)))
+        # ax.axvline(lx_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
+        # ax.axvline(hx_lim, color = 'red', ls = 'dashed')
+        # ax1.axvline(ly_lim, color = 'red', ls = 'dashed')
+        # ax1.axvline(hy_lim, color = 'red', ls = 'dashed')
        
-        ax1.hist(diff_y, histtype = 'step', label = '$\overline{y} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_y),np.std(diff_y)))
+        # ax1.hist(diff_y, histtype = 'step', label = '$\overline{y} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_y),np.std(diff_y)))
         
-        ax.set_xlabel('$\Delta x$ [mas]')
-        ax1.set_xlabel('$\Delta y$ [mas]')
+        # ax.set_xlabel('$\Delta x$ [mas]')
+        # ax1.set_xlabel('$\Delta y$ [mas]')
        
-        if np.all(mask_xy) == False:
-            # This line elimates the 3sigma alignment stars 
-            # s_ls = s_ls[mask_xy]
-            print(10*'💀' + f'\nThere are {sig_cl} \u03C3 alignmet stars\n' + 10*'💀')
+        # if np.all(mask_xy) == False:
             
-            diff_mx = diff_x[np.logical_not(mask_x.mask)]
-            diff_my = diff_y[np.logical_not(mask_y.mask)]
-            ax.hist(diff_mx , color = 'k', alpha = 0.5, lw = 10,label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_mx),np.std(diff_mx)))
-            ax1.hist(diff_my, color = 'k', alpha = 0.5, lw = 10,label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_my),np.std(diff_my)))
-        ax.legend()
-        ax1.legend()
+        #     diff_mx = diff_x[np.logical_not(mask_x.mask)]
+        #     diff_my = diff_y[np.logical_not(mask_y.mask)]
+        #     ax.hist(diff_mx , color = 'k', alpha = 0.5, lw = 10,label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_mx),np.std(diff_mx)))
+        #     ax1.hist(diff_my, color = 'k', alpha = 0.5, lw = 10,label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_my),np.std(diff_my)))
+        # ax.legend()
+        # ax1.legend()
+        
+        # if np.all(mask_xy) == False:
+        #     # This line elimates the 3sigma alignment stars 
+        #     s_ls = s_ls[mask_xy]
+        #     print(10*'💀' + f'\nThere are {sig_cl} \u03C3 alignmet stars\n' + 10*'💀')
+            
     
         
         Kx,Ky=pw.polywarp(s_ls['l2_x'],s_ls['l2_y'],s_ls['l1_x'],s_ls['l1_y'],degree=deg)
@@ -110,8 +113,8 @@ def alignator(survey,gns,gaia,s_ls, d_m,max_deg):
                 break
         
         
-        ax.legend()
-        ax1.legend()
+        # ax.legend()
+        # ax1.legend()
         loop +=1     
         
     

@@ -51,21 +51,21 @@ rc('font',**{'family':'serif','serif':['Palatino']})
 plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib pop up because so many plots, this turining it of
 # %%
 #%%
-field_one = 7
-chip_one = 4
-field_two = 7
-chip_two = 1
-
-field_one = 10
-chip_one = 2
-field_two = 4
-chip_two = 3
-
-
-# field_one = 16
-# chip_one = 2
+# field_one = 7
+# chip_one = 4
 # field_two = 7
 # chip_two = 1
+
+# field_one = 10
+# chip_one = 2
+# field_two = 4
+# chip_two = 3
+
+
+field_one = 16
+chip_one = 2
+field_two = 7
+chip_two = 1
 max_sig = 0.5
 # max_sig = 2
 
