@@ -117,20 +117,20 @@ pm_delete = pm_folder_off + 'pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, 
 
 # ===============================Constants=====================================
 max_sig = 0.5
-d_m = 18 #!!! pixeles are in mas
-max_sep = 0.025*u.arcsec#!!!
-max_deg = 3
+d_m = 12 #!!! pixeles are in mas
+max_sep = 0.04*u.arcsec#!!!
+max_deg = 4
 factor = -1# Multiplies the x coordinate by this (1 or -1)
-# transf = 'affine'
-transf = 'similarity'
+transf = 'affine'
+# transf = 'similarity'
 # transf = 'polynomial'
 order_trans = 1
 clip_in_alig = 'yes' # Clipps the 3sigmas in position during the alignment
 # clip_in_alig = None
 bad_sig  = 3
 
-Ks_lim = [12,14.5]
-# Ks_lim = [0,999]
+# Ks_lim = [12,14.5]
+Ks_lim = [0,999]
 
 
 # =============================================================================
@@ -156,20 +156,22 @@ max_sig = 0.5#TODO
 
 
 
+# =============================================================================
+# GAIA clipping
+# =============================================================================
 
 bad1 = None
-bad2 = None
-bad_both = None
+bad_pm = None
 np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array([]).T, fmt='%.i')
-np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_two,chip_two),np.array([]).T, fmt='%.i')
 
-bad_both =  [[8]]
-bad1 =  []
-bad2 = []
-if bad_both is not None:
-    bad1 = np.unique(bad1 + bad_both[0])
-    bad2 = np.unique(bad2 + bad_both[0])
+# bad_pm =  [[12.0, 9.0, 13.0,14,3,1,7.0, 5.0, 19.0,48]]
+# bad1 =  [30,21,43,28]
+if bad_pm is not None:
+    bad1 = np.unique(bad1 + bad_pm[0])
 
+# =============================================================================
+# 
+# =============================================================================
 
 if bad1 is not None:
     if len(bad1) >0:
@@ -239,7 +241,7 @@ alto2 = header['NAXIS2']
 width2 = ancho2*0.053*u.arcsec
 height2 = alto2*0.053*u.arcsec
 
-e_pm = 0.5
+e_pm = 0.3#!!!
 
 j = Gaia.cone_search_async(coord, np.sqrt((width2)**2+height2**2)/2)
 # j = Gaia.cone_search_async(coord, 1000*u.arcsec)
@@ -254,7 +256,7 @@ gaia_good = filter_gaia_data(
     duplicated_source= False,
     parallax_over_error_min=-10,
     astrometric_excess_noise_sig_max=2,
-    phot_g_mean_mag_min= 18,
+    phot_g_mean_mag_min= None,
     phot_g_mean_mag_max= 13,
     pm_min=0,
     pmra_error_max=e_pm,
@@ -312,8 +314,9 @@ radec_ = radec_.transform_to('icrs')
 ragai1_off,decgai1_off = radec_.spherical_offsets_to(GaiaCoord.frame)
 ragai1_off = (ragai1_off.to(u.mas)).value + (np.array(gaia_good['pmra'])*delta_t1.to(u.yr)).value
 decgai1_off = (decgai1_off.to(u.mas)).value + (np.array(gaia_good['pmdec'])*delta_t1.to(u.yr)).value
-GaiaGNSCoord1 = radec_.spherical_offsets_by(ragai1_off*u.mas, decgai1_off*u.mas)
-# GaiaGNSCoord1  = GaiaCoord#!!! This line DOES NOT move the Gaia stars to the GNS1 epcoh
+# GaiaGNSCoord1 = radec_.spherical_offsets_by(ragai1_off*u.mas, decgai1_off*u.mas)
+
+GaiaGNSCoord1  = GaiaCoord#!!! This line DOES NOT move the Gaia stars to the GNS1 epcoh
 
 # Could be this transformation of Gaia stars (from the sky to the plane, and back) a source of error??
 
@@ -374,7 +377,7 @@ for gs in range(len(ga1_id)):
 if bad1 is not None:
     if clip_bad1 == 'yes':#TODO
         del_1 = np.isin(gaia1['gaia1_id'], bad1)
-        gaia1 = gaia1[~del_1]
+        gaia1 = gaia1[np.logical_not(del_1)]
 
 
     # gaia_np1 = np.delete(gaia_np1,bad1, axis =0)
@@ -546,101 +549,102 @@ ax.legend(fontsize = 9)
 gns2['x2'] = gns2_xyt[:,0]
 gns2['y2'] = gns2_xyt[:,1]
 
-
-
-gns2 = gns_alignator('two_to_one', gns_cons = gns1, gns_var = gns2,
-                      d_m = d_m, max_deg_gns = 4, sig_clip = 3)
-sys.exit(553)
 max_deg_gns = 4
 deg_gns = 1
 d_m = 15
 d_m_pm = 300
-while deg_gns < max_deg_gns:
-    loop += 1 
-    l1_xy = np.array([gns1['x1'],gns1['y1']]).T
-    l2_xy = np.array([gns2['x2'],gns2['y2']]).T
-    comp = compare_lists(l1_xy,l2_xy,d_m)
-    if len(comom_ls) >1:
-        if comom_ls[-1] <= comom_ls[-2]:
-            try:
-                gns2['x2'] = dic_xy[f'trans_{loop-2}'][:,0]
-                gns2['y2'] = dic_xy[f'trans_{loop-2}'][:,1]
-                dic_xy_final['xy_deg%s'%(deg_gns)] = np.array([dic_xy[f'trans_{loop-2}'][:,0],dic_xy[f'trans_{loop-2}'][:,1]]).T            
-                comom_ls =[]
-                dic_xy = {}
-                dic_Kx = {}
-                deg_gns += 1
-                print(f'Number of common star in loop {loop-1} lower tha in loop {loop-2}.\nJupping to degree {deg_gns} ')
-                loop = -1
-                continue
-            except:
-                gns2['x2'] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,0]
-                gns2['y2'] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,1]
-                print(f'Number of common star with polynomial degere {deg_gns} decreases after a single iteration.\nUsing the last iteration of degree {deg_gns -1} ')
-                break
+
+gns2 = gns_alignator(mode = 'two_to_one', gns_cons = gns1, gns_var = gns2,
+                      d_m = d_m, max_deg_gns = 4, sig_clip = 3,
+                      plot = None,)
+
+
+# while deg_gns < max_deg_gns:
+#     loop += 1 
+#     l1_xy = np.array([gns1['x1'],gns1['y1']]).T
+#     l2_xy = np.array([gns2['x2'],gns2['y2']]).T
+#     comp = compare_lists(l1_xy,l2_xy,d_m)
+#     if len(comom_ls) >1:
+#         if comom_ls[-1] <= comom_ls[-2]:
+#             try:
+#                 gns2['x2'] = dic_xy[f'trans_{loop-2}'][:,0]
+#                 gns2['y2'] = dic_xy[f'trans_{loop-2}'][:,1]
+#                 dic_xy_final['xy_deg%s'%(deg_gns)] = np.array([dic_xy[f'trans_{loop-2}'][:,0],dic_xy[f'trans_{loop-2}'][:,1]]).T            
+#                 comom_ls =[]
+#                 dic_xy = {}
+#                 dic_Kx = {}
+#                 deg_gns += 1
+#                 print(f'Number of common star in loop {loop-1} lower tha in loop {loop-2}.\nJupping to degree {deg_gns} ')
+#                 loop = -1
+#                 continue
+#             except:
+#                 gns2['x2'] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,0]
+#                 gns2['y2'] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,1]
+#                 print(f'Number of common star with polynomial degere {deg_gns} decreases after a single iteration.\nUsing the last iteration of degree {deg_gns -1} ')
+#                 break
             
-    comom_ls.append(len(comp))
-    print(f'Common in loop {loop}, degree {deg_gns} = %s'%(len(comp['ind_1'])))
-    # if loop == 1:
-    #     with open(pruebas + 'sig_and_com.txt', 'a') as file:
-    #         file.write('%.1f %.0f\n'%(sig_cl, len(comp['ind_1'])))
+#     comom_ls.append(len(comp))
+#     print(f'Common in loop {loop}, degree {deg_gns} = %s'%(len(comp['ind_1'])))
+#     # if loop == 1:
+#     #     with open(pruebas + 'sig_and_com.txt', 'a') as file:
+#     #         file.write('%.1f %.0f\n'%(sig_cl, len(comp['ind_1'])))
 
-    l1_com = gns1[comp['ind_1']]
-    l2_com = gns2[comp['ind_2']]
+#     l1_com = gns1[comp['ind_1']]
+#     l2_com = gns2[comp['ind_2']]
     
-    diff_mag = l1_com['H1'] - l2_com['H2'] 
-    # diff_mag1 = l1_com['IB230_diff'] - l2_com['IB230_diff'] 
-    diff_x =  l2_com['x2'] - l1_com['x1'] 
-    diff_y =  l2_com['y2'] - l1_com['y1'] 
-    diff_xy = (diff_x**2 + diff_y**2)**0.5
-    mask_m, l_lim,h_lim = sigma_clip(diff_mag, sigma=sig_cl, masked = True, return_bounds= True)
-    
-    
-    
-    # l2_clip = l2_com
-    # l1_clip = l1_com
-    
-    l1_clip = l1_com[np.logical_not(mask_m.mask)]
-    l2_clip = l2_com[np.logical_not(mask_m.mask)]
-    
-# =============================================================================
-#     fig, (ax,ax1) = plt.subplots(1,2)
-#     fig.suptitle(f'Degree = {deg_gns}. Loop = {loop}')
-#     ax.set_xlabel('$\Delta$ H')
-#     ax.hist(diff_mag, label = 'matches = %s\ndist = %.0f mas'%(len(comp['ind_1']), d_m))
-#     ax.axvline(l_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
-#     ax.axvline(h_lim, color = 'red', ls = 'dashed')
-#     ax.legend()
-#     
-#     ax1.hist(diff_x, label = '$\overline{\Delta x} = %.2f\pm%.2f$'%(np.mean(diff_x),np.std(diff_x)), histtype = 'step')
-#     ax1.hist(diff_y, label = '$\overline{\Delta y} = %.2f\pm%.2f$'%(np.mean(diff_y),np.std(diff_y)), histtype = 'step')
-# 
-#     ax1.set_xlabel('$\Delta$ pos [mas]')
-#     ax1.legend()
-# =============================================================================
+#     diff_mag = l1_com['H1'] - l2_com['H2'] 
+#     # diff_mag1 = l1_com['IB230_diff'] - l2_com['IB230_diff'] 
+#     diff_x =  l2_com['x2'] - l1_com['x1'] 
+#     diff_y =  l2_com['y2'] - l1_com['y1'] 
+#     diff_xy = (diff_x**2 + diff_y**2)**0.5
+#     mask_m, l_lim,h_lim = sigma_clip(diff_mag, sigma=sig_cl, masked = True, return_bounds= True)
     
     
     
+#     # l2_clip = l2_com
+#     # l1_clip = l1_com
     
-    xy_1c = np.array([l1_clip['x1'],l1_clip['y1']]).T
-    xy_2c = np.array([l2_clip['x2'],l2_clip['y2']]).T
+#     l1_clip = l1_com[np.logical_not(mask_m.mask)]
+#     l2_clip = l2_com[np.logical_not(mask_m.mask)]
+    
+# # =============================================================================
+# #     fig, (ax,ax1) = plt.subplots(1,2)
+# #     fig.suptitle(f'Degree = {deg_gns}. Loop = {loop}')
+# #     ax.set_xlabel('$\Delta$ H')
+# #     ax.hist(diff_mag, label = 'matches = %s\ndist = %.0f mas'%(len(comp['ind_1']), d_m))
+# #     ax.axvline(l_lim, color = 'red', ls = 'dashed', label = '$\pm$%s$\sigma$'%(sig_cl))
+# #     ax.axvline(h_lim, color = 'red', ls = 'dashed')
+# #     ax.legend()
+# #     
+# #     ax1.hist(diff_x, label = '$\overline{\Delta x} = %.2f\pm%.2f$'%(np.mean(diff_x),np.std(diff_x)), histtype = 'step')
+# #     ax1.hist(diff_y, label = '$\overline{\Delta y} = %.2f\pm%.2f$'%(np.mean(diff_y),np.std(diff_y)), histtype = 'step')
+# # 
+# #     ax1.set_xlabel('$\Delta$ pos [mas]')
+# #     ax1.legend()
+# # =============================================================================
+    
+    
+    
+    
+#     xy_1c = np.array([l1_clip['x1'],l1_clip['y1']]).T
+#     xy_2c = np.array([l2_clip['x2'],l2_clip['y2']]).T
     
 
-    Kx,Ky=pw.polywarp(xy_1c[:,0],xy_1c[:,1],xy_2c[:,0],xy_2c[:,1],degree=deg_gns)
+#     Kx,Ky=pw.polywarp(xy_1c[:,0],xy_1c[:,1],xy_2c[:,0],xy_2c[:,1],degree=deg_gns)
     
-    xi=np.zeros(len(gns2))
-    yi=np.zeros(len(gns2))
+#     xi=np.zeros(len(gns2))
+#     yi=np.zeros(len(gns2))
     
-    for k in range(deg_gns+1):
-                for m in range(deg_gns+1):
-                    xi=xi+Kx[k,m]*gns2['x2']**k*gns2['y2']**m
-                    yi=yi+Ky[k,m]*gns2['x2']**k*gns2['y2']**m
-    dic_xy[f'trans_{loop+1}'] = np.array([xi,yi]).T
+#     for k in range(deg_gns+1):
+#                 for m in range(deg_gns+1):
+#                     xi=xi+Kx[k,m]*gns2['x2']**k*gns2['y2']**m
+#                     yi=yi+Ky[k,m]*gns2['x2']**k*gns2['y2']**m
+#     dic_xy[f'trans_{loop+1}'] = np.array([xi,yi]).T
     
-    # print(Kx[0][0])
-    gns2['x2'] = xi
-    gns2['y2'] = yi
-sys.exit(638)
+#     # print(Kx[0][0])
+#     gns2['x2'] = xi
+#     gns2['y2'] = yi
+# sys.exit(638)
 # %%
 
 Ks_mask = (gns1['Ks1'] > Ks_lim[0]) & (gns1['Ks1'] < Ks_lim[1])
@@ -724,7 +728,7 @@ bad_pm = diff_hist(1,gns1['pm_RA'][gns1_ga['ind_1']],gaia1['pmra'][gns1_ga['ind_
 
 
 # %%
-print('bad_both = ', [x.tolist() for x in bad_pm])
+print('bad_pm = ', [x.tolist() for x in bad_pm])
 print('bad1 = ', bad_pos[0].tolist())
 # print('bad2 = ', bad_pos2[0].tolist())
 

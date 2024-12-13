@@ -113,8 +113,30 @@ gns1_im = GNS_1 +   'calibrated_stars_%s.fits'%(chip_one)
 pm_delete_id = pm_folder_off + 'ID_pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
 pm_delete = pm_folder_off + 'pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
 
+
+# ===============================Constants=====================================
 max_sig = 0.5
-d_m = 50 #!!! pixeles are in mas
+d_m = 12 #!!! pixeles are in mas
+max_sep = 0.05*u.arcsec#!!!
+max_deg = 3
+factor = -1# Multiplies the x coordinate by this (1 or -1)
+transf = 'affine'
+# transf = 'similarity'
+# transf = 'polynomial'
+order_trans = 1
+# clip_in_alig = 'yes' # Clipps the 3sigmas in position during the alignment
+clip_in_alig = None
+bad_sig  = 3
+# 
+# Ks_lim = [12,14.5]
+Ks_lim = [0,999]
+
+d_pm = 150#!!! this is mas. Maximun separation for computing the proper motion
+
+align = '2DPoly'
+# align = 'Polywarp'
+f_mode = 'NWnC'
+# =============================================================================
 
 
 for file in glob.glob(pm_delete):
@@ -137,39 +159,39 @@ max_sig = 0.5#TODO
 
 
 
-bad1 = [12]  
-bad2 = []  
-#
+
+bad1 = None
+bad2 = None
+bad_both = None
+np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array([]).T, fmt='%.i')
+np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_two,chip_two),np.array([]).T, fmt='%.i')
+
+bad_both =  [[18.0, 6.0, 37.0,32]]
+bad1 =  [30.0, 47.0, 49.0, 45.0]
+bad2 =  [30.0, 47.0, 49.0, 45.0]
+if bad_both is not None:
+    bad1 = np.unique(bad1 + bad_both[0])
+    bad2 = np.unique(bad2 + bad_both[0])
 
 
-# bad_all = bad1 + bad2
-# bad_all = np.unique(bad1 + bad2)
-# bad1 = list(bad_all)
-# bad2 = list(bad_all)
+if bad1 is not None:
+    if len(bad1) >0:
+        clip_bad1 = 'yes'#TODO
+    else:
+        clip_bad1 = 'no'#TODO
+    np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array(bad1).T, fmt='%.i')
 
-
-# Save this lists!
-# They make the alignment for f10_c2, f4_c3 (Quintuplet) works (carefull with star 42)
-# bad1 = [14, 28, 54, 19, 37, 47,58,56,55,23,9,11,7,40,0,33,12,49,42]  
-# bad2 = [14, 28, 54, 19, 37, 47,58,56,55,23,9,11,7,40,0,33,12,49,]  
-
-np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array(bad1).T, fmt='%.i')
-np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_two,chip_two),np.array(bad2).T, fmt='%.i')
-
-if len(bad1) >0:
-    clip_bad1 = 'yes'#TODO
-else:
-    clip_bad1 = 'no'#TODO
 # ra1 0, dec1 1, x1 2, y1 3, f1 4, H1 5, dx1 6, dy1 7, df1 8, dH1 9 ,Ks 10, dKs 11
 # gns1 = np.loadtxt(GNS_1off +'stars_calibrated_HK_chip%s_on_gns2_f%sc%s_sxy%s.txt'%(chip_one,field_two,chip_two,max_sig))
 gns1 = Table.read(GNS_1off +'stars_calibrated_HK_chip%s_on_gns2_f%sc%s_sxy%s.txt'%(chip_one,field_two,chip_two,max_sig), format = 'ascii')
 
-
+# Ks_mask = (gns1['Ks1'] > Ks_lim[0]) & (gns1['Ks1'] < Ks_lim[1])
+# gns1 = gns1[Ks_mask]
 p_mas = 0.5*0.106*1000#Trnasform pixeles into mas
 
 
 # gns1['x1'] = gns1['x1']
-gns1['x1'] = gns1['x1']*-1
+gns1['x1'] = gns1['x1']*factor
 gns1['x1'] = gns1['x1']*p_mas
 gns1['y1'] = gns1['y1']*p_mas
 # gns1[:,2] = gns1[:,2]
@@ -195,11 +217,16 @@ with open(pruebas1 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_one, chip_one),'a') as
 
 if field_one == 7 or field_one == 12 or field_one == 10 or field_one == 16:
     t_gns1 = Time(['2015-06-07T00:00:00','2016-01-01T00:00:00'],scale='utc')
-
+if field_one == 60:
+    t_gns1 = Time(['2016-06-13T00:00:00','2016-01-01T00:00:00'],scale='utc')
+if field_one == 100:
+    t_gns1 = Time(['2016-05-20T00:00:00','2016-01-01T00:00:00'],scale='utc')
 if field_two == 7 or field_two == 5:
     t_gns2 = Time(['2022-05-27T00:00:00','2016-01-01T00:00:00'],scale='utc')
 if field_two == 4:
     t_gns2 = Time(['2022-04-05T00:00:00','2016-01-01T00:00:00'],scale='utc')
+if field_two == 20:
+    t_gns2 = Time(['2022-07-25T00:00:00','2016-01-01T00:00:00'],scale='utc')
 
 
 del_t = t_gns2[0]-t_gns1[0]
@@ -346,10 +373,10 @@ for gs in range(len(ga1_id)):
                                                                         gaia1['ra'][gs], gaia1['dec'][gs],
                                                                         gaia1['ra'][gs]+0.00013, gaia1['dec'][gs]+0.00013,
                                                                         gs))
-
-if clip_bad1 == 'yes':#TODO
-    del_1 = np.isin(gaia1['gaia1_id'], bad1)
-    gaia1 = gaia1[~del_1]
+if bad1 is not None:
+    if clip_bad1 == 'yes':#TODO
+        del_1 = np.isin(gaia1['gaia1_id'], bad1)
+        gaia1 = gaia1[~del_1]
 
 
     # gaia_np1 = np.delete(gaia_np1,bad1, axis =0)
@@ -378,12 +405,12 @@ ID_gns1 = np.arange(len(gns1[buenos1]))
 # We select GNS1 foregroud stars and astroaling their pixels coordenates with 
 # the Gaia stars offsets
 
-# fg = (gns1['H1']-gns1['Ks1'])<1.3    
+fg = (gns1['H1']-gns1['Ks1'])<1.3    
 # gns1_fg = gns1[fg]
 gns1_fg = gns1
 
 
-max_sep = 0.08*u.arcsec#!!!
+
 gaia1_coord = SkyCoord(ra = gaia1['ra'], dec = gaia1['dec'], unit = 'degree',frame = 'icrs',obstime='J2016.0' )
 gns1_coor_fg= SkyCoord(ra= gns1_fg['ra1']*u.degree, dec=gns1_fg['Dec1']*u.degree, frame = 'fk5',obstime=f'J{t_gns1[0].jyear}')
 gns1_coor_match = gns1_coor_fg.transform_to('icrs')
@@ -402,20 +429,26 @@ xy_gaia1 = np.array([gaia1_match['x'],gaia1_match['y']]).T
 # p = ski.transform.estimate_transform('affine',
 #                                               xy_gns1, 
 #                                               xy_gaia1)
-p = ski.transform.estimate_transform('similarity',
-                                              xy_gns1, 
-                                              xy_gaia1)
+
+if transf == 'polynomial':
+    p = ski.transform.estimate_transform(transf,
+                                        xy_gns1, 
+                                        xy_gaia1, order = order_trans)
+else:    
+    p = ski.transform.estimate_transform(transf,
+                                    xy_gns1, 
+                                    xy_gaia1)
 
 fig, ax = plt.subplots(1,1)
 ax.scatter(gns1_match['x1'],gns1_match['y1'], marker = '*', label = 'GNS1')
 ax.scatter(gaia1_match['x'],gaia1_match['y'], marker = '*', label = 'Gaia')
+xy_gns1_t = p( xy_gns1 )
+ax.scatter(xy_gns1_t[:,0],xy_gns1_t[:,1], label = 'GNS1_t',s=2)
 ax.legend()
 gns1_xy = np.array([gns1['x1'],gns1['y1']]).T
 gns1_xyt = p(gns1_xy)
 gns1['x1'] = gns1_xyt[:,0] 
 gns1['y1'] = gns1_xyt[:,1] 
-
-# sys.exit(491)
 
  # %%
 fig, ax = plt.subplots(1,1)
@@ -433,7 +466,7 @@ print(30*'-'+f'\nCommon GNS1 and Gaia after initial transformation = f{len(s_ls)
 # %%
 
 
-gns1 = alignator(1, gns1, gaia1, s_ls, d_m, 3)
+gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg, clipping = clip_in_alig, align_by = align, f_mode = f_mode)
 
 # %%
  # Asigns Offsets coordinates to Gaia stars, moves then (epoch 2) and return the
@@ -454,8 +487,7 @@ ga2_id = np.arange(len(gaia_good))
 # Here we are going to cut the Gaia stars over the are of GNS2
 
 gns2 = Table.read(GNS_2off + 'stars_calibrated_H_chip%s_on_gns1_f%sc%s_sxy%s.txt'%(chip_two,field_one,chip_one,max_sig), format = 'ascii')
-# gns2['x2'] = gns2['x2']#TODO
-gns2['x2'] = gns2['x2']*-1#TODO
+gns2['x2'] = gns2['x2']*factor#TODO
 gns2['x2'] = gns2['x2']*p_mas
 gns2['y2'] = gns2['y2']*p_mas#TODO
 # gns2[:,3] = gns2[:,3]*-1#TODO
@@ -506,19 +538,20 @@ for gs in range(len(gaia_np2)):
                                                                         gaia_np2[gs][0], gaia_np2[gs][1],
                                                                         gaia_np2[gs][0]+0.00013, gaia_np2[gs][1]+0.00013,
                                                                         gs))
+if bad2 is not None:
+    if len(bad2) >0:
+        clip_bad2 = 'yes'#TODO
+    else:
+        clip_bad2 = 'no'#TODO                 
+    if clip_bad2 == 'yes':#TODO
+        del_2 = np.isin(gaia2['gaia2_id'], bad2)
+        gaia2 = gaia2[~del_2]
+    np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_two,chip_two),np.array(bad2).T, fmt='%.i')
 
-if len(bad2) >0:
-    clip_bad2 = 'yes'#TODO
-else:
-    clip_bad2 = 'no'#TODO                 
-if clip_bad2 == 'yes':#TODO
-    del_2 = np.isin(gaia2['gaia2_id'], bad2)
-    gaia2 = gaia2[~del_2]
- 
 gaia2.write(GNS_2off + 'gaia_refstars_on_gns2_f%sc%s_gns1_f%sc%s.txt'%(field_two,chip_two,field_one,chip_one), format = 'ascii', overwrite = True)
 
 
-max_sep = 0.08*u.arcsec#!!!
+
 gaia2_coord = SkyCoord(ra = gaia2['ra'], dec = gaia2['dec'], unit = 'degree',frame = 'icrs',obstime='J2016.0' )
 gns2_coor= SkyCoord(ra= gns2['ra2']*u.degree, dec=gns2['Dec2']*u.degree, frame = 'fk5',obstime=f'J{t_gns2[0].jyear}')
 gns2_coor_match = gns2_coor.transform_to('icrs')
@@ -531,13 +564,16 @@ gns2_match = gns2[idx[sep_constraint]]
 xy_gns2 = np.array([gns2_match['x2'],gns2_match['y2']]).T
 xy_gaia2 = np.array([gaia2_match['x'],gaia2_match['y']]).T
 
-p2 = ski.transform.estimate_transform('similarity',
+p2 = ski.transform.estimate_transform(transf,
                                               xy_gns2, 
                                               xy_gaia2)
 
 fig, ax = plt.subplots(1,1)
 ax.scatter(gns2_match['x2'],gns2_match['y2'], marker = '*', label = 'GNS2')
 ax.scatter(gaia2_match['x'],gaia2_match['y'], marker = '*', label = 'Gaia')
+xy_gns2_t = p2( xy_gns2 )
+ax.scatter(xy_gns2_t[:,0],xy_gns2_t[:,1], label = 'GNS2_t',s=2)
+
 ax.legend()
 gns2_xy = np.array([gns2['x2'],gns2['y2']]).T
 gns2_xyt = p2(gns2_xy)
@@ -555,18 +591,19 @@ s_ls = compare_lists(np.array([gns2['x2'],gns2['y2']]).T, np.array([gaia2['x'],g
 
 ax.scatter(s_ls['l1_x'],s_ls['l1_y'],s=20, marker = 'x', label = f'Matching = %s\nbefore = {len(xy_gns2)}'%(len(s_ls['l1_x'])))
 ax.legend()
-print(30*'-'+f'\nCommon GNS1 and Gaia after initial transformation = f{len(s_ls)}')
+print(30*'-'+f'\nCommon GNS2 and Gaia after initial transformation = f{len(s_ls)}')
 
 
-gns2 = alignator(2, gns2, gaia2, s_ls, d_m, 3)
+gns2 = alignator(2, gns2, gaia2, s_ls, d_m, max_deg, clipping = clip_in_alig, align_by = align, f_mode = f_mode)
 
 # %%
 # Promer motion computation
+Ks_mask = (gns1['Ks1'] > Ks_lim[0]) & (gns1['Ks1'] < Ks_lim[1])
+gns1 = gns1[Ks_mask]#!!!
 
 gns1_gxy  = np.array([gns1['x1'], gns1['y1']]).T 
 gns2_gxy  = np.array([gns2['x2'], gns2['y2']]).T 
 
-d_pm = 150#!!! this is mas
 gns_com = compare_lists(gns1_gxy, gns2_gxy,d_pm )
 
 gns1_gxy  = gns1_gxy[gns_com['ind_1']]  
@@ -593,8 +630,9 @@ gns2['pm_Dec'] = pm_y
 
 fig, (ax,ax1) = plt.subplots(1,2)
 
-ax.hist(pm_x, bins = 30, label = '$\overline{\mu_{RA}} = %.2f$\n$\sigma = %.2f$'%(np.mean(pm_x),np.std(pm_x)))
-ax1.hist(pm_y, bins = 30, label = '$\overline{\mu_{Dec}} = %.2f$\n$\sigma = %.2f$'%(np.mean(pm_y),np.std(pm_y)))
+bins = 20#!!!
+ax.hist(pm_x, bins = bins, label = '$\overline{\mu_{RA}} = %.2f$\n$\sigma = %.2f$'%(np.mean(pm_x),np.std(pm_x)))
+ax1.hist(pm_y, bins = bins, label = '$\overline{\mu_{Dec}} = %.2f$\n$\sigma = %.2f$'%(np.mean(pm_y),np.std(pm_y)))
 ax.set_xlabel('$\mu_{RA}$ [mas]')
 ax1.set_xlabel('$\mu_{Dec}$ [mas]')
 ax.legend()
@@ -603,109 +641,40 @@ ax1.legend()
 ga1_xy = np.array([gaia1['x'], gaia1['y']]).T
 gns1_ga = compare_lists(gns1_gxy, ga1_xy,50)
 
-diff_hist( gns1_ga['l1_x'], gns1_ga['l2_x'],
+bad_pos = diff_hist(1, gns1_ga['l1_x'], gns1_ga['l2_x'],
               gns1_ga['l1_y'], gns1_ga['l2_y'],
-              sig_cl = 3, variable = 'coordinates')
-diff_hist(gns1['pm_RA'][gns1_ga['ind_1']],gaia1['pmra'][gns1_ga['ind_2']],
+              sig_cl = bad_sig, variable = 'coordinates',
+              gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'])
+
+
+
+ga2_xy = np.array([gaia2['x'], gaia2['y']]).T
+gns2_ga = compare_lists(gns2_gxy, ga2_xy,50)
+
+bad_pos2 = diff_hist(2, gns2_ga['l1_x'], gns2_ga['l2_x'],
+              gns2_ga['l1_y'], gns2_ga['l2_y'],
+              sig_cl = bad_sig, variable = 'coordinates',
+              gaia_all = gaia2, gaia_ind = gns2_ga['ind_2'])
+
+bad_pm = diff_hist(1,gns1['pm_RA'][gns1_ga['ind_1']],gaia1['pmra'][gns1_ga['ind_2']],
           gns1['pm_Dec'][gns1_ga['ind_1']], gaia1['pmdec'][gns1_ga['ind_2']] ,
-          sig_cl = 3, variable = 'pm')
-sys.exit(604)
-# %%
-
-# %
-# PM comparison with Gaia
-
-
-diff_mux = gns1['pm_RA'][gns1_ga['ind_1']] - gaia1['pmra'][gns1_ga['ind_2']] 
-diff_muy = gns1['pm_Dec'][gns1_ga['ind_1']] - gaia1['pmdec'][gns1_ga['ind_2']] 
-
-# '#ff7f0e'
-# fig, ax =
-
-
-sig_cl = 3#!!!
-mask_x, lx_lim,hx_lim = sigma_clip(diff_ra, sigma=sig_cl, masked = True, return_bounds= True)
-mask_y, ly_lim,hy_lim = sigma_clip(diff_dec, sigma=sig_cl, masked = True, return_bounds= True)
-
-mask_mux, lmux_lim,hmux_lim = sigma_clip(diff_mux, sigma=sig_cl, masked = True, return_bounds= True)
-mask_muy, lmuy_lim,hmuy_lim = sigma_clip(diff_muy, sigma=sig_cl, masked = True, return_bounds= True)
-
-# mask_xy = mask_x & mask_y # mask_xy = np.logical(mx, my)
-mask_xy = np.logical_and(np.logical_not(mask_x.mask), np.logical_not(mask_y.mask))
-
-mask_muxy = np.logical_and(np.logical_not(mask_mux.mask), np.logical_not(mask_muy.mask))
-
-
-fig, (ax,ax1) = plt.subplots(1,2)
-ax.hist(diff_ra, histtype = 'step', color ='#1f77b4', 
-        label = '$\overline{\Delta RA} = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_ra),np.std(diff_ra)) )
-ax1.hist(diff_dec, histtype = 'step', color ='#ff7f0e', 
-        label = '$\overline{\Delta Dec} = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_dec),np.std(diff_dec)) )
-if np.all(mask_xy) == False:
-    diff_ram = diff_ra[mask_xy]    
-    diff_decm = diff_dec[mask_xy]    
-    ax.hist(diff_ram, color ='k', alpha = 0.5,
-            label = '$\overline{\Delta RA} = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_ram),np.std(diff_ram)) )
-    ax1.hist(diff_decm, color ='k', alpha = 0.5,
-            label = '$\overline{\Delta Dec} = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_decm),np.std(diff_decm)) )
-
-ax.legend()
-ax1.legend()
-
-
-
-
-fig, (ax,ax1) = plt.subplots(1,2)
-ax.hist(diff_mux, histtype = 'step', color ='#1f77b4', 
-        label = '$\overline{\Delta \mu_{RA}} = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_mux),np.std(diff_mux)) )
-ax1.hist(diff_muy, histtype = 'step', color ='#ff7f0e', 
-        label = '$\overline{\Delta \mu_{Dec}}  = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_muy),np.std(diff_muy)) )
-if np.all(mask_xy) == False:
-    diff_muxm = diff_mux[mask_muxy]    
-    diff_muym = diff_muy[mask_muxy]    
-    ax.hist(diff_muxm, color ='k', alpha = 0.5,
-            label = '$\overline{\Delta \mu_{RA}}= %.2f$\n$\sigma = %.2f$'%(np.mean(diff_muxm),np.std(diff_muxm)) )
-    ax1.hist(diff_muym, color ='k', alpha = 0.5,
-            label = '$\overline{\Delta \mu_{Dec}} = %.2f$\n$\sigma = %.2f$'%(np.mean(diff_muym),np.std(diff_muym)) )
-
-ax.legend()
-ax1.legend()
+          sig_cl = bad_sig, variable = 'pm',  gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'])
 
 # %%
-# mask_mux, lmux_lim,hmux_lim = sigma_clip(diff_mux, sigma=sig_cl, masked = True, return_bounds= True)
-# mask_muy, lmuy_lim,hmuy_lim = sigma_clip(diff_muy, sigma=sig_cl, masked = True, return_bounds= True)
+print(30*'☠️')
+print('bad_both = ',bad_pm)
+print('bad1 = ',bad_pos)
+print('bad2 = ',bad_pos2)
 
-mal_xy = np.logical_not(mask_xy)
-fig,(ax, ax1) = plt.subplots(1,2)
-mal_ind = gaia1['gaia1_id'][gns1_ga['ind_2']][mal_xy]
-ax.scatter(diff_ra, diff_dec)
-for i, (x, y) in enumerate(zip(diff_ra[mal_xy], diff_dec[mal_xy])):
-    ax.annotate(mal_ind[i], (x, y), textcoords="offset points", xytext=(5, 5), ha='center')
-ax.axvline(lx_lim, ls = 'dashed', color = 'r')
-ax.axvline(hx_lim, ls = 'dashed', color = 'r')
-ax.axhline(ly_lim, ls = 'dashed', color = 'r')
-ax.axhline(hy_lim, ls = 'dashed', color = 'r')
-ax.set_xlabel('$\Delta RA$')
-ax.set_ylabel('$\Delta Dec$')
-
-mal_muxy = np.logical_not(mask_muxy)
-mal_ind = gaia1['gaia1_id'][gns1_ga['ind_2']][mal_muxy]
-ax1.scatter(diff_mux, diff_muy)
-for i, (x, y) in enumerate(zip(diff_mux[mal_muxy], diff_muy[mal_muxy])):
-    ax1.annotate(mal_ind[i], (x, y), textcoords="offset points", xytext=(5, 5), ha='center')
-ax1.axvline(lmux_lim, ls = 'dashed', color = 'r')
-ax1.axvline(hmux_lim, ls = 'dashed', color = 'r')
-ax1.axhline(lmuy_lim, ls = 'dashed', color = 'r')
-ax1.axhline(hmuy_lim, ls = 'dashed', color = 'r')
-ax1.set_xlabel('$\Delta \mu_{RA}$')
-ax1.set_ylabel('$\Delta \mu_{Dec}$')
-
+print(30*'☠️')
 # %%
+print('bad_both = ', [x.tolist() for x in bad_pm])
+print('bad1 = ', bad_pos[0].tolist())
+print('bad2 = ', bad_pos2[0].tolist())
 
-
-
-
-
-
-
-
+#%%
+# fig, ax = plt.subplots(1,1)
+# ax.scatter(gns1['x1'],gns1['y1'], label = 'GNS1_t')
+# ax.scatter(gns2['x2'],gns2['y2'], s=2,label = 'GNS2_t')
+# ax.legend()
+    

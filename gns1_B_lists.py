@@ -62,10 +62,17 @@ plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib 
 # chip_two = 3
 
 
-field_one = 16
-chip_one = 2
-field_two = 7
+# field_one = 16
+# chip_one = 2
+# field_two = 7
+# chip_two = 1
+
+
+field_one = 100#This field B6
+chip_one = 4
+field_two = 20
 chip_two = 1
+
 max_sig = 0.5
 # max_sig = 2
 
@@ -73,6 +80,10 @@ red_pers = 'RS'
 # red_pers = 'AL'
 if field_one == 7 or field_one == 12 or field_one == 10 or field_one == 16:
     t1 = Time(['2015-06-07T00:00:00'],scale='utc')
+elif field_one == 60:
+    t1 = Time(['2016-06-13T00:00:00'],scale='utc')
+elif field_one ==  100:
+    t1 = Time(['2016-05-20T00:00:00'],scale='utc')
 else:
     print(f'NO time detected for this field_one = {field_one}')
     sys.exit()
@@ -80,6 +91,8 @@ if field_two == 7 or field_two == 5:
     t2 = Time(['2022-05-27T00:00:00'],scale='utc')
 elif field_two == 4:
     t2 = Time(['2022-04-05T00:00:00'],scale='utc')
+elif field_two == 20:
+    t2 = Time(['2022-07-25T00:00:00'],scale='utc')
 else:
     print(f'NO time detected for this field_two = {field_two}')
     sys.exit()
@@ -161,20 +174,24 @@ gns1 = gns1_all[unc_cut]
 gns1_gal = SkyCoord(ra = gns1['ra1'], dec = gns1['Dec1'], 
                     unit = 'degree', frame = 'fk5', equinox = 'J2000',
                     obstime = 'J2015.43').galactic
-# sys.exit(144)
+
 # %%
 gns2_all = Table.read(GNS_2 + 'stars_calibrated_H_chip%s.txt'%(chip_two), names = ('ra2',	'Dec2',	'x2',	'y2',	'f2',	'H2',	'dx2',	'dy2',	'df2',	'dH2'), format = 'ascii')
 unc_cut2 = np.where((gns2_all['dx2']<max_sig) & (gns2_all['dy2']<max_sig))
-gns2 = gns2_all[unc_cut2]
+# gns2 = gns2_all[unc_cut2]
+gns2 = gns2_all
 gns2_gal = SkyCoord(ra = gns2['ra2'], dec = gns2['Dec2'], 
                     unit = 'degree', frame = 'fk5', equinox = 'J2000',
                     obstime = 'J2022.4').galactic
+
+
+# %%
 
 l2 = gns2_gal.l.wrap_at('360d')
 l1 = gns1_gal.l.wrap_at('360d')
 fig, ax = plt.subplots(1,1,figsize =(10,10))
 ax.scatter(l1, gns1_gal.b,label = 'GNS_1 Fied %s, chip %s'%(field_one,chip_one),zorder=3)
-ax.scatter(l2, gns2_gal.b,label = 'GNS_2 Fied %s, chip %s'%(field_two,chip_two))
+ax.scatter(l2, gns2_gal.b,s = 1,color = 'r',label = 'GNS_2 Fied %s, chip %s'%(field_two,chip_two))
 
 ax.invert_xaxis()
 ax.legend()
@@ -192,7 +209,7 @@ else:
     clus_name = 'Arches'
 
 
-ax.scatter(arch.l, arch.b,s = 200, label = clus_name)
+# ax.scatter(arch.l, arch.b,s = 200, label = clus_name)
 
 
 buenos1 = np.where((gns1_gal.l>min(gns2_gal.l)) & (gns1_gal.l<max(gns2_gal.l)) &
@@ -217,7 +234,7 @@ fig, ax = plt.subplots(1,1,figsize =(10,10))
 
 ax.scatter(gns2['ra2'], gns2['Dec2'],label = 'GNS_2 Fied %s, chip %s'%(field_two,chip_two))
 ax.scatter(gns1['ra1'], gns1['Dec1'],label = 'GNS_1 Fied %s, chip %s'%(field_one,chip_one))
-ax.scatter(arch_ecu.ra, arch_ecu.dec,s = 200, label = clus_name)
+# ax.scatter(arch_ecu.ra, arch_ecu.dec,s = 200, label = clus_name)
 ax.legend()
 ax.set_xlabel('Ra(deg)')
 ax.set_ylabel('Dec(deg)')

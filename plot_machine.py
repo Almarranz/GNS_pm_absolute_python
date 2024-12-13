@@ -41,7 +41,14 @@ plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib 
 # IPython.get_ipython().run_line_magic('matplotlib', 'auto')
 IPython.get_ipython().run_line_magic('matplotlib', 'inline')
 
-def diff_hist(l1_x,l2_x,l1_y,l2_y,sig_cl, clipping = None, variable = None):
+field_one, chip_one, field_two, chip_two,t1,t2,max_sig = np.loadtxt('/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/fields_and_chips.txt', 
+                                                       unpack=True)
+field_one = field_one.astype(int)
+chip_one = chip_one.astype(int)
+field_two = field_two.astype(int)
+chip_two = chip_two.astype(int)
+
+def diff_hist(survey,l1_x,l2_x,l1_y,l2_y,sig_cl, gaia_all, gaia_ind,clipping = None, variable = None):
     diff_x = l1_x - l2_x
     diff_y = l1_y - l2_y
     
@@ -59,8 +66,8 @@ def diff_hist(l1_x,l2_x,l1_y,l2_y,sig_cl, clipping = None, variable = None):
         if variable == 'pm':
             leg_x = '$\overline{\Delta \mu_{RA}}$'
             leg_y = '$\overline{\Delta \mu_{Dec}}$'
-            lab_x = '$\mu_{RA} [mas/yr]$'
-            lab_y = '$\mu_{Dec} [mas/yr]$'
+            lab_x = '$\Delta \mu_{RA} [mas/yr]$'
+            lab_y = '$\Delta \mu_{Dec} [mas/yr]$'
 
     # sig_cl = 3#!!!
     mask_x, lx_lim,hx_lim = sigma_clip(diff_x, sigma=sig_cl, masked = True, return_bounds= True)
@@ -70,15 +77,42 @@ def diff_hist(l1_x,l2_x,l1_y,l2_y,sig_cl, clipping = None, variable = None):
     mask_xy = np.logical_and(np.logical_not(mask_x.mask), np.logical_not(mask_y.mask))
 
 
+    
+    
+    mal_xy = np.logical_not(mask_xy)
+    # mal_ind = gaia_all['gaia1_id'][gaia_ind][mal_xy]
+    fig, ax = plt.subplots(1,1)
+    plt.suptitle('GAIA & \nGNS%s [F%sC%s], GNS2 [F%sC%s]'%( survey, field_one, chip_one,field_two,chip_two))
+
+    
+    try:
+        mal_ind = gaia_all['gaia1_id'][gaia_ind][mal_xy]
+    except:
+        mal_ind = gaia_all['gaia2_id'][gaia_ind][mal_xy]
+        
+    ax.scatter(diff_x, diff_y)
+    for i, (x, y) in enumerate(zip(diff_x[mal_xy], diff_y[mal_xy])):
+        ax.annotate(mal_ind[i], (x, y), textcoords="offset points", xytext=(5, 5), ha='center')
+    ax.axvline(lx_lim, ls = 'dashed', color = 'r')
+    ax.axvline(hx_lim, ls = 'dashed', color = 'r')
+    ax.axhline(ly_lim, ls = 'dashed', color = 'r')
+    ax.axhline(hy_lim, ls = 'dashed', color = 'r')
+    ax.set_xlabel(lab_x)
+    ax.set_ylabel(lab_y)
+    ax.grid()
+    ax.axis('equal')
+    
     fig, (ax,ax1) = plt.subplots(1,2)
+    plt.suptitle('GAIA & GNS%s [F%sC%s], GNS2 [F%sC%s]'%( survey, field_one, chip_one,field_two,chip_two))
+    ax.set_title(f'Matching stars = {len(diff_x)}')
     ax.hist(diff_x, histtype = 'step', color ='#1f77b4', 
             label = '%s = %.2f\n$\sigma = %.2f$'%(leg_x, np.mean(diff_x),np.std(diff_x)) )
-    ax.axvline(lx_lim, ls = 'dashed', color = 'r', lw = 3)
-    ax.axvline(hx_lim, ls = 'dashed', color = 'r', lw = 3)
+    ax.axvline(lx_lim, ls = 'dashed', color = 'r', lw = 1)
+    ax.axvline(hx_lim, ls = 'dashed', color = 'r', lw = 1)
     ax1.hist(diff_y, histtype = 'step', color ='#ff7f0e', 
             label = '%s = %.2f\n$\sigma = %.2f$'%(leg_y, np.mean(diff_y),np.std(diff_y)) )
-    ax1.axvline(ly_lim, ls = 'dashed', color = 'r', lw = 3)
-    ax1.axvline(hy_lim, ls = 'dashed', color = 'r', lw = 3)
+    ax1.axvline(ly_lim, ls = 'dashed', color = 'r', lw = 1)
+    ax1.axvline(hy_lim, ls = 'dashed', color = 'r', lw = 1)
     
     
     if np.all(mask_xy) == False:
@@ -93,5 +127,6 @@ def diff_hist(l1_x,l2_x,l1_y,l2_y,sig_cl, clipping = None, variable = None):
     ax1.legend()
     ax.set_xlabel(lab_x)
     ax1.set_xlabel(lab_y)
+    print(mal_ind)
     
-    # return mask_xy
+    return [mal_ind.value]

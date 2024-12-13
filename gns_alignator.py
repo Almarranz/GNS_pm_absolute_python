@@ -14,7 +14,8 @@ import sys
 from astropy.stats import sigma_clip
 
 
-def gns_alignator(mode,gns_var,gns_cons, max_deg_gns, d_m,  plot = None, clipping = None, sig_clip = None):
+def gns_alignator(mode,gns_var,gns_cons, max_deg_gns, d_m,  plot = None, sig_clip = None):
+
     loop = 0
     comom_ls = []
     dic_xy = {}
@@ -41,8 +42,6 @@ def gns_alignator(mode,gns_var,gns_cons, max_deg_gns, d_m,  plot = None, clippin
         
     
     deg_gns = 1
-    d_m = 15
-    d_m_pm = 300
     while deg_gns < max_deg_gns:
         loop += 1 
         l1_xy = np.array([gns_cons[x_1],gns_cons[y_1]]).T
@@ -132,5 +131,6 @@ def gns_alignator(mode,gns_var,gns_cons, max_deg_gns, d_m,  plot = None, clippin
         # print(Kx[0][0])
         gns_var[x_2] = xi
         gns_var[y_2] = yi
-
+ 
         
+    return gns_var
