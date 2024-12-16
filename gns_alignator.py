@@ -47,25 +47,37 @@ def gns_alignator(mode,gns_var,gns_cons, max_deg_gns, d_m,  plot = None, sig_cli
         l1_xy = np.array([gns_cons[x_1],gns_cons[y_1]]).T
         l2_xy = np.array([gns_var[x_2],gns_var[y_2]]).T
         comp = compare_lists(l1_xy,l2_xy,d_m)
+        # if len(comom_ls) >1:
+        #     if comom_ls[-1] <= comom_ls[-2]:
+        #         try:
+        #             gns_var[x_2] = dic_xy[f'trans_{loop-2}'][:,0]
+        #             gns_var[y_2] = dic_xy[f'trans_{loop-2}'][:,1]
+        #             dic_xy_final['xy_deg%s'%(deg_gns)] = np.array([dic_xy[f'trans_{loop-2}'][:,0],dic_xy[f'trans_{loop-2}'][:,1]]).T            
+        #             comom_ls =[]
+        #             dic_xy = {}
+        #             dic_Kx = {}
+        #             deg_gns += 1
+        #             print(f'Number of common star in loop {loop-1} lower tha in loop {loop-2}.\nJupping to degree {deg_gns} ')
+        #             loop = -1
+        #             continue
+        #         except:
+        #             gns_var[x_2] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,0]
+        #             gns_var[y_2] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,1]
+        #             print(f'Number of common star with polynomial degere {deg_gns} decreases after a single iteration.\nUsing the last iteration of degree {deg_gns -1} ')
+        #             break
+                
         if len(comom_ls) >1:
             if comom_ls[-1] <= comom_ls[-2]:
-                try:
-                    gns_var[x_2] = dic_xy[f'trans_{loop-2}'][:,0]
-                    gns_var[y_2] = dic_xy[f'trans_{loop-2}'][:,1]
-                    dic_xy_final['xy_deg%s'%(deg_gns)] = np.array([dic_xy[f'trans_{loop-2}'][:,0],dic_xy[f'trans_{loop-2}'][:,1]]).T            
-                    comom_ls =[]
-                    dic_xy = {}
-                    dic_Kx = {}
-                    deg_gns += 1
-                    print(f'Number of common star in loop {loop-1} lower tha in loop {loop-2}.\nJupping to degree {deg_gns} ')
-                    loop = -1
-                    continue
-                except:
-                    gns_var[x_2] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,0]
-                    gns_var[y_2] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,1]
-                    print(f'Number of common star with polynomial degere {deg_gns} decreases after a single iteration.\nUsing the last iteration of degree {deg_gns -1} ')
-                    break
-                
+                # gns_var[x_2] = dic_xy[f'trans_{loop-2}'][:,0]
+                # gns_var[y_2] = dic_xy[f'trans_{loop-2}'][:,1]
+                dic_xy_final['xy_deg%s'%(deg_gns)] = np.array([dic_xy[f'trans_{loop-2}'][:,0],dic_xy[f'trans_{loop-2}'][:,1]]).T            
+                comom_ls =[]
+                dic_xy = {}
+                deg_gns += 1
+                print(f'Number of common star in loop {loop-1} lower tha in loop {loop-2}.\nJupping to degree {deg_gns} ')
+        
+                continue
+               
         comom_ls.append(len(comp))
         print(f'Common in loop {loop}, degree {deg_gns} = %s'%(len(comp['ind_1'])))
         # if loop == 1:
