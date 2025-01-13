@@ -97,15 +97,12 @@ pm_folder_off ='/Users/amartinez/Desktop/PhD/HAWK/pm_gns1_gns2_absolute_python/'
 
 field_one, chip_one, field_two, chip_two,t1,t2,max_sig = np.loadtxt('/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/fields_and_chips.txt', 
                                                        unpack=True)
-# field_one = field_one.astype(int)
-# chip_one = chip_one.astype(int)
-# field_two = field_two.astype(int)
-# chip_two = chip_two.astype(int)
+field_one = field_one.astype(int)
+chip_one = chip_one.astype(int)
+field_two = field_two.astype(int)
+chip_two = chip_two.astype(int)
 
-field_one = 100
-chip_one = 4
-field_two = 20
-chip_two = 1
+
 GNS_1='/Users/amartinez/Desktop/PhD/HAWK/GNS_1/lists/%s/chip%s/'%(field_one, chip_one)
 
 GNS_1off='/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/%s/chip%s/'%(field_one, chip_one)
@@ -120,16 +117,16 @@ pm_delete = pm_folder_off + 'pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, 
 
 # ===============================Constants=====================================
 max_sig = 0.5
-d_m = 12 #!!! pixeles are in mas
-max_sep = 0.02*u.arcsec#!!!
-max_deg = 4
-factor = 1# Multiplies the x coordinate by this (1 or -1)
+d_m = 20 #!!! pixeles are in mas
+max_sep = 0.05*u.arcsec#!!!
+max_deg = 3
+factor = -1# Multiplies the x coordinate by this (1 or -1)
 # transf = 'affine'
-transf = 'similarity'
-# transf = 'polynomial'
+# transf = 'simil1arity'
+transf = 'polynomial'
 order_trans = 1
-clip_in_alig = 'yes' # Clipps the 3sigmas in position during the alignment
-# clip_in_alig = None
+# clip_in_alig = 'yes' # Clipps the 3sigmas in position during the alignment
+clip_in_alig = None
 bad_sig  = 3
 align_1 = 'Polywarp'
 # align_1 = '2DPoly'
@@ -144,12 +141,12 @@ Ks_lim = [0,999]
 # move_Gaia = 'no'
 move_Gaia = 'yes'
 
-max_deg_gns = 3
+max_deg_gns = 4
 deg_gns = 1
 d_m_gns = 15
-d_m_pm = 100
+d_m_pm = 150
 
-e_pm = 0.2#!!! Maximum pm error for Gaia ref stars
+e_pm = 0.3#!!! Maximum pm error for Gaia ref stars
 
 # =============================================================================
 
@@ -178,30 +175,28 @@ max_sig = 0.5#TODO
 # GAIA clipping
 # =============================================================================
 
-bad1 = None
+bad2 = None
 bad_pm = None
-np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array([]).T, fmt='%.i')
+np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_one,chip_one),np.array([]).T, fmt='%.i')
 
 
 bad_pm =  [[]]
-bad1 =  []
+bad2 =  []
 if bad_pm is not None:
-    bad1 = np.unique(bad1 + bad_pm[0])
+    bad2 = np.unique(bad2 + bad_pm[0])
 
 # =============================================================================
 # 
 # =============================================================================
 
-if bad1 is not None:
-    if len(bad1) >0:
-        clip_bad1 = 'yes'#TODO
+if bad2 is not None:
+    if len(bad2) >0:
+        clip_bad2 = 'yes'#TODO
     else:
-        clip_bad1 = 'no'#TODO
-    np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array(bad1).T, fmt='%.i')
+        clip_bad2 = 'no'#TODO
+    np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_one,chip_one),np.array(bad2).T, fmt='%.i')
 
-# ra1 0, dec1 1, x1 2, y1 3, f1 4, H1 5, dx1 6, dy1 7, df1 8, dH1 9 ,Ks 10, dKs 11
-# gns1 = np.loadtxt(GNS_1off +'stars_calibrated_HK_chip%s_on_gns2_f%sc%s_sxy%s.txt'%(chip_one,field_two,chip_two,max_sig))
-gns1 = Table.read(GNS_1off +'stars_calibrated_HK_chip%s_on_gns2_f%sc%s_sxy%s.txt'%(chip_one,field_two,chip_two,max_sig), format = 'ascii')
+gns2 = Table.read(GNS_2off + 'stars_calibrated_H_chip%s_on_gns1_f%sc%s_sxy%s.txt'%(chip_two,field_one,chip_one,max_sig), format = 'ascii')
 
 # Ks_mask = (gns1['Ks1'] > Ks_lim[0]) & (gns1['Ks1'] < Ks_lim[1])
 # gns1 = gns1[Ks_mask]
@@ -210,13 +205,13 @@ pix_scale =0.5*0.1064
 p_mas = pix_scale*1000#Trnasform pixeles into mas
 
 # gns1['x1'] = gns1['x1']
-gns1['x1'] = gns1['x1']*factor
-gns1['x1'] = gns1['x1']*p_mas
-gns1['y1'] = gns1['y1']*p_mas
-# gns1[:,2] = gns1[:,2]
-# np.savetxt(GNS_1 +'stars_calibrated_HK_chip%s_sxy%s.txt'%(chip_one,max_sig),gns1, fmt ='%.8f',header='x, dx, y, dy, raH, draH, decH, ddecH, mJ, dmJ, mH, dmH, mK, dmK')
-gns1_coor =  SkyCoord(ra=gns1['ra1'], dec=gns1['Dec1'],unit = 'degree' ,frame = 'fk5',equinox ='J2000',obstime='J2015.5')
-gns1_coor =gns1_coor.transform_to('icrs')
+gns2['x2'] = gns2['x2']*factor
+gns2['x2'] = gns2['x2']*p_mas
+gns2['y2'] = gns2['y2']*p_mas
+
+
+gns2_coor =  SkyCoord(ra=gns2['ra2'], dec=gns2['Dec2'],unit = 'degree' ,frame = 'fk5',equinox ='J2000',obstime='J2022')
+gns2_coor =gns2_coor.transform_to('icrs')
 
 
 # Here we are going get the informations in the header of GNS1
@@ -224,11 +219,11 @@ f =fits.open(gns1_im)
 w = WCS(f[0].header)    
 header = fits.getheader(gns1_im)
 # x_cent, y_cent =header['NAXIS1']/2,header['NAXIS2']/2
-x_cent, y_cent = np.mean(gns1['ra1']), np.mean(gns1['Dec1'])
-radec_ = SkyCoord(ra = x_cent, dec = y_cent, unit = 'degree', frame = 'fk5', equinox = 'J2000', obstime ='J2015.5')
-with open(pruebas1 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_one, chip_one),'w') as file:
+x_cent, y_cent = np.mean(gns2['ra2']), np.mean(gns2['Dec2'])
+radec_ = SkyCoord(ra = x_cent, dec = y_cent, unit = 'degree', frame = 'fk5', equinox = 'J2000', obstime ='J2022')
+with open(pruebas2 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_two, chip_two),'w') as file:
     file.write('# Region file format: DS9 version 4.1'+"\n"+'global color=blue dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
-with open(pruebas1 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_one, chip_one),'a') as file:
+with open(pruebas2 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_two, chip_two),'a') as file:
     file.write('circle(%s,%s,0.5")'%(x_cent, y_cent))
 
 
@@ -261,10 +256,10 @@ width2 = ancho2*0.053*u.arcsec
 height2 = alto2*0.053*u.arcsec
 
 
-j = Gaia.cone_search_async(coord, np.sqrt((width2)**2+height2**2)/2)
+j = Gaia.cone_search_async(coord, np.sqrt((width2)**2+height2**2))
 # j = Gaia.cone_search_async(coord, 1000*u.arcsec)
 gaia_ = j.get_results()
-gaia_.write(pruebas1 + 'gaia1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii', overwrite = True)
+gaia_.write(pruebas2 + 'gaia2_f%sc%s.txt'%(field_two,chip_two), format = 'ascii', overwrite = True)
 
 # If you get gaia_ from the Gaia website use "duplicated_source= False"
 gaia_com = gaia_
@@ -308,8 +303,7 @@ np.savetxt(pruebas1 + 'gaia.txt', np.array([gaia_good['ra'],gaia_good['dec']]).T
 # %
 delta_t1 = t_gns1[0] - t_gns1[1]
 delta_t2 = t_gns2[0] - t_gns2[1]
-# delta_t1 =  t_gns1[0] - t_gns1[0]
-# delta_t2 =  t_gns2[0] - t_gns2[0]
+
 
 GaiaCoord = SkyCoord(ra=gaia_good['ra'],
                    dec=gaia_good['dec'],
@@ -329,14 +323,14 @@ if field_one == 10 and chip_one ==2:
 # Asigns Offsets coordinates to Gaia stars, moves then  and return the
 # corresponding ra dec coordenates using spherical_offsets_by method
 radec_ = radec_.transform_to('icrs')
-ragai1_off,decgai1_off = radec_.spherical_offsets_to(GaiaCoord.frame)
-ragai1_off = (ragai1_off.to(u.mas)).value + (np.array(gaia_good['pmra'])*delta_t1.to(u.yr)).value
-decgai1_off = (decgai1_off.to(u.mas)).value + (np.array(gaia_good['pmdec'])*delta_t1.to(u.yr)).value
+ragai2_off,decgai2_off = radec_.spherical_offsets_to(GaiaCoord.frame)
+ragai2_off = (ragai2_off.to(u.mas)).value + (np.array(gaia_good['pmra'])*delta_t2.to(u.yr)).value
+decgai2_off = (decgai2_off.to(u.mas)).value + (np.array(gaia_good['pmdec'])*delta_t2.to(u.yr)).value
 
 if move_Gaia == 'yes':
-    GaiaGNSCoord1 = radec_.spherical_offsets_by(ragai1_off*u.mas, decgai1_off*u.mas)
+    GaiaGNSCoord2 = radec_.spherical_offsets_by(ragai2_off*u.mas, decgai2_off*u.mas)
 elif move_Gaia == 'no':
-    GaiaGNSCoord1  = GaiaCoord#!!! This line DOES NOT move the Gaia stars to the GNS1 epcoh
+    GaiaGNSCoord2  = GaiaCoord#!!! This line DOES NOT move the Gaia stars to the GNS1 epcoh
 
 # Could be this transformation of Gaia stars (from the sky to the plane, and back) a source of error??
 
@@ -349,19 +343,19 @@ dxy_des = np.sqrt(dx_des**2 + dy_des**2)
 # %
 # Here we are going to cut the Gaia stars over the area of GNS1
 gaia_coord_gal = gaia_coord.galactic
-gns1_coord_gal = gns1_coor.galactic
+gns2_coord_gal = gns2_coor.galactic
 
 lg = gaia_coord_gal.l.wrap_at('360d')
-l1 = gns1_coord_gal.l.wrap_at('360d')
+l1 = gns2_coord_gal.l.wrap_at('360d')
 
 
-buenos1 = np.where((gaia_coord_gal.l>min(gns1_coord_gal.l)) & (gaia_coord_gal.l<max(gns1_coord_gal.l)) &
-                   (gaia_coord_gal.b>min(gns1_coord_gal.b)) & (gaia_coord_gal.b<max(gns1_coord_gal.b)))
+buenos2 = np.where((gaia_coord_gal.l>min(gns2_coord_gal.l)) & (gaia_coord_gal.l<max(gns2_coord_gal.l)) &
+                   (gaia_coord_gal.b>min(gns2_coord_gal.b)) & (gaia_coord_gal.b<max(gns2_coord_gal.b)))
 
 fig, ax = plt.subplots(1,1,figsize =(6,6))
 # ax.scatter(lg, gaia_coord_gal.b, label ='Gaia stars')
-ax.scatter(l1, gns1_coord_gal.b, label = 'GNS1 (f%s c%s)'%(field_one, chip_one) )  
-ax.scatter(lg[buenos1], gaia_coord_gal[buenos1].b, label ='Gaia over GNS1')
+ax.scatter(l1, gns2_coord_gal.b, label = 'GNS2 (f%s c%s)'%(field_two, chip_two) )  
+ax.scatter(lg[buenos2], gaia_coord_gal[buenos2].b, label ='Gaia over GNS2')
 ax.invert_xaxis()
 ax.set_xlabel('l[deg]', fontsize = 20)
 ax.set_ylabel('b [deg]',fontsize = 20)
@@ -371,41 +365,41 @@ ax.legend()
 
 
 # Each gaia stars get its own ID
-ga1_id = np.arange(len(gaia_good[buenos1]))
-gaia_np1 =np.array([GaiaGNSCoord1[buenos1].ra.value, GaiaGNSCoord1[buenos1].dec.value,
-                     dx_des[buenos1], dy_des[buenos1],
-                     ragai1_off[buenos1], decgai1_off[buenos1],
-                     np.array(gaia_good['pmra'][buenos1]), np.array(gaia_good['pmdec'][buenos1]),
-                     gaia_good['pmra_error'][buenos1].value, gaia_good['pmdec_error'][buenos1].value,
-                     gaia_good['phot_g_mean_mag'][buenos1].value,
-                     ga1_id]).T
+ga2_id = np.arange(len(gaia_good[buenos2]))
+gaia_np2 =np.array([GaiaGNSCoord2[buenos2].ra.value, GaiaGNSCoord2[buenos2].dec.value,
+                     dx_des[buenos2], dy_des[buenos2],
+                     ragai2_off[buenos2], decgai2_off[buenos2],
+                     np.array(gaia_good['pmra'][buenos2]), np.array(gaia_good['pmdec'][buenos2]),
+                     gaia_good['pmra_error'][buenos2].value, gaia_good['pmdec_error'][buenos2].value,
+                     gaia_good['phot_g_mean_mag'][buenos2].value,
+                     ga2_id]).T
 # Saves two differnte lists: one with All gaia stars and the other after the 
 # 3sigma clipping done when comparing with Gaia.
-gaia1 = Table(gaia_np1, names = ('ra',	'dec',	'dra',	'ddec',	'x',	'y',	'pmra',	'pmdec',	'dpmra',	'dpmdec','phot_g_mean_mag','gaia1_id'))
+gaia2 = Table(gaia_np2, names = ('ra',	'dec',	'dra',	'ddec',	'x',	'y',	'pmra',	'pmdec',	'dpmra',	'dpmdec','phot_g_mean_mag','gaia2_id'))
 
-gaia1.write(GNS_1off + 'ALL_gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii', overwrite = True) 
+gaia2.write(GNS_2off + 'ALL_gaia_refstars_on_gns2_f%sc%s.txt'%(field_two,chip_two), format = 'ascii', overwrite = True) 
 
 with open(gaia_list1+ 'gaia_gns1_f%sc%s_on_gns2_f%sc%s_sxy%s.reg'%(field_one,chip_one,field_two,chip_two,max_sig), 'w') as f:
     f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
     f.close
-for gs in range(len(ga1_id)):
+for gs in range(len(ga2_id)):
     with open(gaia_list1+ 'gaia_gns1_f%sc%s_on_gns2_f%sc%s_sxy%s.reg'%(field_one,chip_one,field_two,chip_two,max_sig), 'a') as f:
-        f.write('circle(%s,%s,0.5") \n point(%s,%s) # point=cross \n # text(%s,%s) font="helvetica 24 normal roman" text={%.0f} \n'%(gaia1['ra'][gs], gaia1['dec'][gs],
-                                                                        gaia1['ra'][gs], gaia1['dec'][gs],
-                                                                        gaia1['ra'][gs]+0.00013, gaia1['dec'][gs]+0.00013,
+        f.write('circle(%s,%s,0.5") \n point(%s,%s) # point=cross \n # text(%s,%s) font="helvetica 24 normal roman" text={%.0f} \n'%(gaia2['ra'][gs], gaia2['dec'][gs],
+                                                                        gaia2['ra'][gs], gaia2['dec'][gs],
+                                                                        gaia2['ra'][gs]+0.00013, gaia2['dec'][gs]+0.00013,
                                                                         gs))
-if bad1 is not None:
-    if clip_bad1 == 'yes':#TODO
-        del_1 = np.isin(gaia1['gaia1_id'], bad1)
-        gaia1 = gaia1[np.logical_not(del_1)]
+if bad2 is not None:
+    if clip_bad2 == 'yes':#TODO
+        del_2 = np.isin(gaia2['gaia2_id'], bad2)
+        gaia2 = gaia2[np.logical_not(del_2)]
 
 
     # gaia_np1 = np.delete(gaia_np1,bad1, axis =0)
 # np.savetxt(GNS_1off + 'gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one), gaia_np1, fmt ='%.8f', 
 #            header = 'ra, dec, dra(mas), ddec(mas), x, y, pmra(mas/yr), pmdec, dpmra(mas/yr), dpmdec,dradec')
-gaia1.write(GNS_1off + 'gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one),format = 'ascii',overwrite = True)
+gaia2.write(GNS_2off + 'gaia_refstars_on_gns2_f%sc%s.txt'%(field_two,chip_two),format = 'ascii',overwrite = True)
 
-ID_gns1 = np.arange(len(gns1[buenos1]))
+ID_gns2 = np.arange(len(gns2[buenos2]))
 
 # with open(pruebas1+ 'gns1_around_gaiaf%sc%s_sxy%s.reg'%(field_one,chip_one,max_sig), 'w') as f:
 #     f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=blue dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
@@ -423,26 +417,22 @@ ID_gns1 = np.arange(len(gns1[buenos1]))
 
 #
 # %%
-# We select GNS1 foregroud stars and astroaling their pixels coordenates with 
+# We select GNS1 foregroud stars and aling their pixels coordenates with 
 # the Gaia stars offsets
 
-fg = (gns1['H1']-gns1['Ks1'])<1.3    
-# gns1_fg = gns1[fg]
-gns1_fg = gns1
 
 
-
-gaia1_coord = SkyCoord(ra = gaia1['ra'], dec = gaia1['dec'], unit = 'degree',frame = 'icrs',obstime='J2016.0' )
-gns1_coor_fg= SkyCoord(ra= gns1_fg['ra1']*u.degree, dec=gns1_fg['Dec1']*u.degree, frame = 'fk5',obstime=f'J{t_gns1[0].jyear}')
-gns1_coor_match = gns1_coor_fg.transform_to('icrs')
-idx,d2d,d3d = gaia1_coord.match_to_catalog_sky(gns1_coor_fg,nthneighbor=1)# ,nthneighbor=1 is for 1-to-1 match
+gaia2_coord = SkyCoord(ra = gaia2['ra'], dec = gaia2['dec'], unit = 'degree',frame = 'icrs',obstime='J2016.0' )
+gns2_coor= SkyCoord(ra= gns2['ra2']*u.degree, dec=gns2['Dec2']*u.degree, frame = 'fk5',obstime=f'J{t_gns2[0].jyear}')
+gns2_coor_match = gns2_coor.transform_to('icrs')
+idx,d2d,d3d = gaia2_coord.match_to_catalog_sky(gns2_coor,nthneighbor=1)# ,nthneighbor=1 is for 1-to-1 match
 sep_constraint = d2d < max_sep
-gaia1_match = gaia1[sep_constraint]
-gns1_match = gns1_fg[idx[sep_constraint]]
+gaia2_match = gaia2[sep_constraint]
+gns2_match = gns2[idx[sep_constraint]]
 
 
-xy_gns1 = np.array([gns1_match['x1'],gns1_match['y1']]).T
-xy_gaia1 = np.array([gaia1_match['x'],gaia1_match['y']]).T
+xy_gns2 = np.array([gns2_match['x2'],gns2_match['y2']]).T
+xy_gaia2 = np.array([gaia2_match['x'],gaia2_match['y']]).T
 
 # p = ski.transform.estimate_transform('polynomial',
 #                                               xy_gns1, 
@@ -453,40 +443,41 @@ xy_gaia1 = np.array([gaia1_match['x'],gaia1_match['y']]).T
 
 if transf == 'polynomial':
     p = ski.transform.estimate_transform(transf,
-                                        xy_gns1, 
-                                        xy_gaia1, order = order_trans)
+                                        xy_gns2, 
+                                        xy_gaia2, order = order_trans)
 else:    
     p = ski.transform.estimate_transform(transf,
-                                    xy_gns1, 
-                                    xy_gaia1)
+                                    xy_gns2, 
+                                    xy_gaia2)
 
 fig, ax = plt.subplots(1,1)
-ax.scatter(gns1_match['x1'],gns1_match['y1'], marker = '*', label = 'GNS1')
-ax.scatter(gaia1_match['x'],gaia1_match['y'], marker = '*', label = 'Gaia')
-xy_gns1_t = p( xy_gns1 )
-ax.scatter(xy_gns1_t[:,0],xy_gns1_t[:,1], label = 'GNS1_t',s=2)
+ax.scatter(gns2_match['x2'],gns2_match['y2'], marker = '*', label = 'GNS2')
+ax.scatter(gaia2_match['x'],gaia2_match['y'], marker = '*', label = 'Gaia')
+xy_gns2_t = p( xy_gns2 )
+ax.scatter(xy_gns2_t[:,0],xy_gns2_t[:,1], label = 'GNS1_t',s=2)
 ax.legend()
-gns1_xy = np.array([gns1['x1'],gns1['y1']]).T
-gns1_xyt = p(gns1_xy)
-gns1['x1'] = gns1_xyt[:,0] 
-gns1['y1'] = gns1_xyt[:,1] 
+gns2_xy = np.array([gns2['x2'],gns2['y2']]).T
+gns2_xyt = p(gns2_xy)
+gns2['x2'] = gns2_xyt[:,0] 
+gns2['y2'] = gns2_xyt[:,1] 
 
  # %%
 fig, ax = plt.subplots(1,1)
-ax.set_title(f'GNS1 f{field_one} c{chip_one}')
-ax.scatter(gns1['x1'],gns1['y1'])
-ax.scatter(gaia1['x'],gaia1['y'])
+ax.set_title(f'GNS2 f{field_two} c{chip_two}. Gaia moved = {move_Gaia}')
+ax.scatter(gns2['x2'],gns2['y2'])
+ax.scatter(gaia2['x'],gaia2['y'])
 
 # pix_scale = 0.1064*0.53
 # d_m = max_sep.value*pix_scale
 
-s_ls = compare_lists(np.array([gns1['x1'],gns1['y1']]).T, np.array([gaia1['x'],gaia1['y']]).T, d_m)
-ax.scatter(s_ls['l1_x'],s_ls['l1_y'],s=20, marker = 'x', label = f'Matching = %s\nbefore = {len(xy_gns1)}'%(len(s_ls['l1_x'])))
+s_ls = compare_lists(np.array([gns2['x2'],gns2['y2']]).T, np.array([gaia2['x'],gaia2['y']]).T, d_m)
+ax.scatter(s_ls['l1_x'],s_ls['l1_y'],s=20, marker = 'x', label = f'Matching = %s\nbefore = {len(xy_gns2)}'%(len(s_ls['l1_x'])))
 ax.legend()
 print(30*'-'+f'\nCommon GNS1 and Gaia after initial transformation = f{len(s_ls)}')
 # %%
 
-gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg =max_deg, clipping = clip_in_alig, align_by = align_1, f_mode = f_mode)
+gns2 = alignator(2, gns2, gaia2, s_ls, d_m, max_deg =max_deg, clipping = clip_in_alig, align_by = align_1, f_mode = f_mode)
+
 
 # gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg, clipping = None, plot = '')
 # %%
@@ -494,25 +485,24 @@ gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg =max_deg, clipping = clip_in
 # =============================================================================
 # # Load GNS2 and align with GNS1
 # =============================================================================
-gns1_coor =  SkyCoord(ra=gns1['ra1'], dec=gns1['Dec1'],unit = 'degree' ,frame = 'fk5',equinox ='J2000',obstime='J2015.5')
-gns1_coor =gns1_coor.transform_to('icrs')
+
+gns1 = Table.read(GNS_1off +'stars_calibrated_HK_chip%s_on_gns2_f%sc%s_sxy%s.txt'%(chip_one,field_two,chip_two,max_sig), format = 'ascii')
 
 
-gns2 = Table.read(GNS_2off + 'stars_calibrated_H_chip%s_on_gns1_f%sc%s_sxy%s.txt'%(chip_two,field_one,chip_one,max_sig), format = 'ascii')
-gns2['x2'] = gns2['x2']*factor#TODO
-gns2['x2'] = gns2['x2']*p_mas
-gns2['y2'] = gns2['y2']*p_mas#TODO
+gns1['x1'] = gns1['x1']*factor#TODO
+gns1['x1'] = gns1['x1']*p_mas
+gns1['y1'] = gns1['y1']*p_mas#TODO
 # gns2[:,3] = gns2[:,3]*-1#TODO
-gns2_coor = SkyCoord(ra= gns2['ra2']*u.degree, dec=gns2['Dec2']*u.degree, frame = 'fk5', equinox = 'J2000',obstime=f'J{t_gns2[0].jyear}')
-gns2_coor = gns2_coor.transform_to('icrs')
+gns1_coor = SkyCoord(ra= gns1['ra1']*u.degree, dec=gns1['Dec1']*u.degree, frame = 'fk5', equinox = 'J2000',obstime=f'J{t_gns1[0].jyear}')
+gns1_coor = gns1_coor.transform_to('icrs')
 
 gns_sep = 0.08*u.arcsec
-idx,d2d,d3d = gns1_coor.match_to_catalog_sky(gns2_coor)# ,nthneighbor=1 is for 1-to-1 match
+idx,d2d,d3d = gns2_coor.match_to_catalog_sky(gns1_coor)# ,nthneighbor=1 is for 1-to-1 match
 sep_constraint = d2d < gns_sep
-gns1_match = gns1[sep_constraint]
-gns2_match = gns2[idx[sep_constraint]]
+gns2_match = gns2[sep_constraint]
+gns1_match = gns1[idx[sep_constraint]]
 
-sig_cl = 1#!!!
+sig_cl = 2#!!!
 diff_H = gns1_match['H1']-gns2_match['H2']
 mask_H, l_lim,h_lim = sigma_clip(diff_H, sigma=sig_cl, masked = True, return_bounds= True)
 
@@ -536,49 +526,48 @@ dic_xy_final = {}
 
 # xy_1c = np.array((gns1_match['x1'], gns1_match['y1'])).T
 # xy_2c = np.array((gns2_match['x2'], gns2_match['y2'])).T
-xy_1c = np.array((gns1_match['x1'][np.logical_not(mask_H.mask)], gns1_match['y1'][np.logical_not(mask_H.mask)])).T
 xy_2c = np.array((gns2_match['x2'][np.logical_not(mask_H.mask)], gns2_match['y2'][np.logical_not(mask_H.mask)])).T
+xy_1c = np.array((gns1_match['x1'][np.logical_not(mask_H.mask)], gns1_match['y1'][np.logical_not(mask_H.mask)])).T
 
 
 if transf == 'polynomial':
     pg = ski.transform.estimate_transform(transf,
-                                        xy_2c, 
-                                        xy_1c, order = order_trans)
+                                        xy_1c, 
+                                        xy_2c, order = order_trans)
 else:    
     pg = ski.transform.estimate_transform(transf,
-                                    xy_2c, 
-                                    xy_1c)
+                                    xy_1c, 
+                                    xy_2c)
 
 
 
 
-gns2_xy = np.array((gns2['x2'],gns2['y2'])).T
-gns2_xyt = pg(gns2_xy)
+gns1_xy = np.array((gns1['x1'],gns1['y1'])).T
+gns1_xyt = pg(gns1_xy)
 
-similarity_list = compare_lists(np.array([gns1['x1'],gns1['y1']]).T,gns2_xyt, d_m)
+similarity_list = compare_lists(np.array([gns2['x2'],gns2['y2']]).T,gns1_xyt, d_m)
 
-# %
+# %%
 fig, ax = plt.subplots(1,1)
-ax.scatter(gns1['x1'],gns1['y1'],s=10, color = 'k', alpha = 0.1,label = 'GNS1')
+ax.scatter(gns2['x2'],gns2['y2'],s=10, color = 'k', alpha = 0.005,label = 'GNS2')
 # ax.scatter(xy_2c[:,0],xy_2c[:,1], marker = 'x',label = 'GNS2 matched')
-ax.scatter(gns2_xyt[:,0],gns2_xyt[:,1],marker = 'x',color = 'r',s = 0.0001,label = 'GNS2 transformed')
+ax.scatter(gns1_xyt[:,0],gns1_xyt[:,1],marker = 'x',color = 'r',s = 0.1,label = 'GNS1 transformed')
 
 ax.legend(fontsize = 9) 
 # ax.set_xlim(2000,2300)
 # %
 
-gns2['x2'] = gns2_xyt[:,0]
-gns2['y2'] = gns2_xyt[:,1]
+gns1['x1'] = gns1_xyt[:,0]
+gns1['y1'] = gns1_xyt[:,1]
 
 
-gns2 = gns_alignator(mode = 'two_to_one',  gns_cons = gns1, gns_var = gns2,
+
+gns1 = gns_alignator(mode = 'one_to_two',  gns_cons = gns2, gns_var = gns1,
                       align_by = align_2,f_mode = f_mode,
                       d_m = d_m_gns, max_deg_gns = max_deg_gns, sig_clip = 3,
                       plot = None)
 
-
 # %%
-
 Ks_mask = (gns1['Ks1'] > Ks_lim[0]) & (gns1['Ks1'] < Ks_lim[1])
 gns1 = gns1[Ks_mask]
 
@@ -631,19 +620,19 @@ fig, ax = plt.subplots(1,1)
 ax.scatter(gns2['x2'][::10],gns2['y2'][::10])
 ax.scatter(gns1['x1'][::10],gns1['y1'][::10],s =1)
 ax.scatter(gns1['x1'][::10],gns1['y1'][::10],s =1)
-ax.scatter(gaia1['x'],gaia1['y'],s =5)
+ax.scatter(gaia2['x'],gaia2['y'],s =5)
 
 
 print('yooommmaaaaaaa')
-gns1_xy = np.array([gns1['x1'],gns1['y1']]).T
-ga1_xy = np.array([gaia1['x'], gaia1['y']]).T
+gns2_xy = np.array([gns2['x2'],gns2['y2']]).T
+ga2_xy = np.array([gaia2['x'], gaia2['y']]).T
 
-gns1_ga = compare_lists(np.array([gns1['x1'],gns1['y1']]).T, np.array([gaia1['x'],gaia1['y']]).T, d_m)
+gns2_ga = compare_lists(np.array([gns2['x2'],gns2['y2']]).T, np.array([gaia2['x'],gaia2['y']]).T, d_m)
 
-bad_pos = diff_hist(1, gns1_ga['l1_x'], gns1_ga['l2_x'],
-              gns1_ga['l1_y'], gns1_ga['l2_y'],
+bad_pos = diff_hist(2, gns2_ga['l1_x'], gns2_ga['l2_x'],
+              gns2_ga['l1_y'], gns2_ga['l2_y'],
               sig_cl = bad_sig, variable = 'coordinates',
-              gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'])
+              gaia_all = gaia2, gaia_ind = gns2_ga['ind_2'])
 
 # ga2_xy = np.array([gaia2['x'], gaia2['y']]).T
 # gns2_ga = compare_lists(gns2_gxy, ga2_xy,50)
@@ -653,16 +642,18 @@ bad_pos = diff_hist(1, gns1_ga['l1_x'], gns1_ga['l2_x'],
 #               sig_cl = bad_sig, variable = 'coordinates',
 #               gaia_all = gaia2, gaia_ind = gns2_ga['ind_2'])
 
-bad_pm = diff_hist(1,gns1['pm_RA'][gns1_ga['ind_1']],gaia1['pmra'][gns1_ga['ind_2']],
-          gns1['pm_Dec'][gns1_ga['ind_1']], gaia1['pmdec'][gns1_ga['ind_2']] ,
-          sig_cl = bad_sig, variable = 'pm',  gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'])
+bad_pm = diff_hist(2,gns2['pm_RA'][gns2_ga['ind_1']],gaia2['pmra'][gns2_ga['ind_2']],
+          gns2['pm_Dec'][gns2_ga['ind_1']], gaia2['pmdec'][gns2_ga['ind_2']] ,
+          sig_cl = bad_sig, variable = 'pm',  gaia_all = gaia2, gaia_ind = gns2_ga['ind_2'])
 
 
 
 # %%
 print('bad_pm = ', [x.tolist() for x in bad_pm])
-print('bad1 = ', bad_pos[0].tolist())
+print('bad2 = ', bad_pos[0].tolist())
 # print('bad2 = ', bad_pos2[0].tolist())
+
+
 
 
 

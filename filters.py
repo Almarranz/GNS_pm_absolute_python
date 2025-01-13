@@ -127,7 +127,7 @@ def filter_vvv_data(vvv_table,
     mask = np.ones(len(vvv_table), dtype = bool)
         
     if center is not None:
-        mask &= (vvv_table['J'] - vvv_table['Ks1'] > 2)
+        mask &= (vvv_table['J'] - vvv_table['Ks'] > 2)
         
     if pmRA is not None:
         mask &= (vvv_table['pmRA'] < 900)

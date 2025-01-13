@@ -96,10 +96,14 @@ pm_folder_off ='/Users/amartinez/Desktop/PhD/HAWK/pm_gns1_gns2_absolute_python/'
 
 field_one, chip_one, field_two, chip_two,t1,t2,max_sig = np.loadtxt('/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/fields_and_chips.txt', 
                                                        unpack=True)
-field_one = field_one.astype(int)
-chip_one = chip_one.astype(int)
-field_two = field_two.astype(int)
-chip_two = chip_two.astype(int)
+# field_one = field_one.astype(int)
+# chip_one = chip_one.astype(int)
+# field_two = field_two.astype(int)
+# chip_two = chip_two.astype(int)
+field_one = 100
+chip_one = 1
+field_two = 20
+chip_two = 1
 
 
 GNS_1='/Users/amartinez/Desktop/PhD/HAWK/GNS_1/lists/%s/chip%s/'%(field_one, chip_one)
@@ -113,16 +117,15 @@ gns1_im = GNS_1 +   'calibrated_stars_%s.fits'%(chip_one)
 pm_delete_id = pm_folder_off + 'ID_pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
 pm_delete = pm_folder_off + 'pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
 
-
 # ===============================Constants=====================================
 max_sig = 0.5
 d_m = 12 #!!! pixeles are in mas
-max_sep = 0.05*u.arcsec#!!!
+max_sep = 0.02*u.arcsec#!!!
 max_deg = 3
 factor = -1# Multiplies the x coordinate by this (1 or -1)
-transf = 'affine'
+# transf = 'affine'
 # transf = 'similarity'
-# transf = 'polynomial'
+transf = 'polynomial'
 order_trans = 1
 # clip_in_alig = 'yes' # Clipps the 3sigmas in position during the alignment
 clip_in_alig = None
@@ -133,9 +136,9 @@ Ks_lim = [0,999]
 
 d_pm = 150#!!! this is mas. Maximun separation for computing the proper motion
 
-align = '2DPoly'
-# align = 'Polywarp'
-f_mode = 'NWnC'
+align = 'Polywarp'
+# align = '2DPoly'
+f_mode = 'WnC'
 # =============================================================================
 
 
@@ -166,12 +169,14 @@ bad_both = None
 np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array([]).T, fmt='%.i')
 np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_two,chip_two),np.array([]).T, fmt='%.i')
 
-bad_both =  [[18.0, 6.0, 37.0,32]]
-bad1 =  [30.0, 47.0, 49.0, 45.0]
-bad2 =  [30.0, 47.0, 49.0, 45.0]
+bad_both =  [[9.0, 14.0, 21.0]]
+bad1 =  [52.0]
+bad2 =  [14.0, 19.0]
 if bad_both is not None:
-    bad1 = np.unique(bad1 + bad_both[0])
-    bad2 = np.unique(bad2 + bad_both[0])
+    # bad1 = np.unique(bad1 + bad_both[0])
+    # bad2 = np.unique(bad2 + bad_both[0])
+    bad1 = np.unique([bad1 + bad2][0] + bad_both[0])
+    bad2 = bad1
 
 
 if bad1 is not None:
@@ -626,11 +631,11 @@ gns1['pm_Dec'] = pm_y
 gns2['pm_RA'] = pm_x
 gns2['pm_Dec'] = pm_y
 
-
-
+if Ks_lim[0]==0:
+    gns1.write(pm_folder_off + 'pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%sdeg%s_dmax%s_sxy%s.txt'%(field_one, chip_one, field_two, chip_two,max_deg-1,d_pm,max_sig), format = 'ascii')
 fig, (ax,ax1) = plt.subplots(1,2)
 
-bins = 20#!!!
+bins = 15#!!!
 ax.hist(pm_x, bins = bins, label = '$\overline{\mu_{RA}} = %.2f$\n$\sigma = %.2f$'%(np.mean(pm_x),np.std(pm_x)))
 ax1.hist(pm_y, bins = bins, label = '$\overline{\mu_{Dec}} = %.2f$\n$\sigma = %.2f$'%(np.mean(pm_y),np.std(pm_y)))
 ax.set_xlabel('$\mu_{RA}$ [mas]')
@@ -644,7 +649,9 @@ gns1_ga = compare_lists(gns1_gxy, ga1_xy,50)
 bad_pos = diff_hist(1, gns1_ga['l1_x'], gns1_ga['l2_x'],
               gns1_ga['l1_y'], gns1_ga['l2_y'],
               sig_cl = bad_sig, variable = 'coordinates',
-              gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'])
+              gaia_all = gaia1, 
+              gaia_ind = gns1_ga['ind_2'], align_by = align,
+              field_one = field_one , chip_one = chip_one, field_two = field_two, chip_two = chip_two)
 
 
 
@@ -654,11 +661,13 @@ gns2_ga = compare_lists(gns2_gxy, ga2_xy,50)
 bad_pos2 = diff_hist(2, gns2_ga['l1_x'], gns2_ga['l2_x'],
               gns2_ga['l1_y'], gns2_ga['l2_y'],
               sig_cl = bad_sig, variable = 'coordinates',
-              gaia_all = gaia2, gaia_ind = gns2_ga['ind_2'])
+              gaia_all = gaia2, gaia_ind = gns2_ga['ind_2'],align_by = align,
+              field_one = field_one , chip_one = chip_one, field_two = field_two, chip_two = chip_two)
 
 bad_pm = diff_hist(1,gns1['pm_RA'][gns1_ga['ind_1']],gaia1['pmra'][gns1_ga['ind_2']],
           gns1['pm_Dec'][gns1_ga['ind_1']], gaia1['pmdec'][gns1_ga['ind_2']] ,
-          sig_cl = bad_sig, variable = 'pm',  gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'])
+          sig_cl = bad_sig, variable = 'pm',  gaia_all = gaia1, gaia_ind = gns1_ga['ind_2'], align_by = align,
+          field_one = field_one , chip_one = chip_one, field_two = field_two, chip_two = chip_two)
 
 # %%
 print(30*'☠️')

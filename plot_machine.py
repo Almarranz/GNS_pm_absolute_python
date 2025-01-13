@@ -41,14 +41,16 @@ plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib 
 # IPython.get_ipython().run_line_magic('matplotlib', 'auto')
 IPython.get_ipython().run_line_magic('matplotlib', 'inline')
 
-field_one, chip_one, field_two, chip_two,t1,t2,max_sig = np.loadtxt('/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/fields_and_chips.txt', 
-                                                       unpack=True)
-field_one = field_one.astype(int)
-chip_one = chip_one.astype(int)
-field_two = field_two.astype(int)
-chip_two = chip_two.astype(int)
+# field_one, chip_one, field_two, chip_two,t1,t2,max_sig = np.loadtxt('/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/fields_and_chips.txt', 
+#                                                        unpack=True)
+# field_one = field_one.astype(int)
+# chip_one = chip_one.astype(int)
+# field_two = field_two.astype(int)
+# chip_two = chip_two.astype(int)
 
-def diff_hist(survey,l1_x,l2_x,l1_y,l2_y,sig_cl, gaia_all, gaia_ind,clipping = None, variable = None):
+def diff_hist(survey,l1_x,l2_x,l1_y,l2_y,sig_cl, gaia_all, gaia_ind,
+              align_by = None,clipping = None, variable = None,
+              field_one = None , chip_one = None, field_two = None, chip_two = None):
     diff_x = l1_x - l2_x
     diff_y = l1_y - l2_y
     
@@ -68,6 +70,8 @@ def diff_hist(survey,l1_x,l2_x,l1_y,l2_y,sig_cl, gaia_all, gaia_ind,clipping = N
             leg_y = '$\overline{\Delta \mu_{Dec}}$'
             lab_x = '$\Delta \mu_{RA} [mas/yr]$'
             lab_y = '$\Delta \mu_{Dec} [mas/yr]$'
+            if align_by is not None:
+                lab_alig = align_by
 
     # sig_cl = 3#!!!
     mask_x, lx_lim,hx_lim = sigma_clip(diff_x, sigma=sig_cl, masked = True, return_bounds= True)
@@ -105,6 +109,7 @@ def diff_hist(survey,l1_x,l2_x,l1_y,l2_y,sig_cl, gaia_all, gaia_ind,clipping = N
     fig, (ax,ax1) = plt.subplots(1,2)
     plt.suptitle('GAIA & GNS%s [F%sC%s], GNS2 [F%sC%s]'%( survey, field_one, chip_one,field_two,chip_two))
     ax.set_title(f'Matching stars = {len(diff_x)}')
+    ax1.set_title(f'Aligend by = {align_by}')
     ax.hist(diff_x, histtype = 'step', color ='#1f77b4', 
             label = '%s = %.2f\n$\sigma = %.2f$'%(leg_x, np.mean(diff_x),np.std(diff_x)) )
     ax.axvline(lx_lim, ls = 'dashed', color = 'r', lw = 1)

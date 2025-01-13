@@ -169,19 +169,34 @@ def alignator(survey,gns,gaia,s_ls, d_m,max_deg, align_by = None,f_mode = None, 
                 
         comom_ls.append(len(s_ls))
         # if comom_ls[-1] <= comom_ls[-2] :
-        if comom_ls[-1] < comom_ls[-2]:
-            if len(comom_ls)>2:
+        # # if comom_ls[-1] < comom_ls[-2]:
+        #     if len(comom_ls)>2:
                 
-                gns[id1] = dic_xy[f'trans_{loop-1}'][:,0]
-                gns[id2] = dic_xy[f'trans_{loop-1}'][:,1]
+        #         gns[id1] = dic_xy[f'trans_{loop-1}'][:,0]
+        #         gns[id2] = dic_xy[f'trans_{loop-1}'][:,1]
+        #         deg +=1
+        #         print(30*'-'+f'\nBreaking after loop = {loop-1}\nStarting alignment degree = {deg}\n' + 30*'-')
+        #         continue
+        #     else:
+        #         print(f'Polynomial of degree {deg} does not work')
+        #         gns[id1] = dic_xy['trans_0'][:,0]
+        #         gns[id2] = dic_xy['trans_0'][:,1]
+        #         break
+        if comom_ls[-1] <= comom_ls[-2] :
+            if len(comom_ls)>2:
+            # if len(comom_ls)>10:
+                
+                # gns[id1] = dic_xy[f'trans_{loop-1}'][:,0]
+                # gns[id2] = dic_xy[f'trans_{loop-1}'][:,1]
                 deg +=1
                 print(30*'-'+f'\nBreaking after loop = {loop-1}\nStarting alignment degree = {deg}\n' + 30*'-')
                 continue
-            else:
-                print(f'Polynomial of degree {deg} does not work')
-                gns[id1] = dic_xy['trans_0'][:,0]
-                gns[id2] = dic_xy['trans_0'][:,1]
-                break
+            # else:
+            #     print(f'Polynomial of degree {deg} does not work')
+            #     gns[id1] = dic_xy['trans_0'][:,0]
+            #     gns[id2] = dic_xy['trans_0'][:,1]
+            #     break
+       
         
         
         # ax.legend()

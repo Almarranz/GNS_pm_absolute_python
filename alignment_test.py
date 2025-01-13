@@ -16,7 +16,7 @@ from astropy.modeling.models import Polynomial2D
 from astropy.modeling.fitting import LinearLSQFitter
 from astropy.modeling import models, fitting
 from astropy.table import Table, hstack
-
+from gns_alignator import gns_alignator
 import numpy as np
 
 field_one, chip_one, field_two, chip_two,t1,t2,max_sig = np.loadtxt('/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/lists/fields_and_chips.txt', 
@@ -45,7 +45,7 @@ num_points = len(gns2)
 
 # Displacements: Gaussian distribution
 mean_shift = 0  # Mean of the Gaussian
-std_shift = 15  # Standard deviation of the Gaussian
+std_shift = 5  # Standard deviation of the Gaussian
 shifts = np.random.normal(mean_shift, std_shift, num_points)
 
 # Angles for displacement direction
@@ -60,76 +60,48 @@ x_sh = gns2['x2'] + dx
 y_sh = gns2['y2'] + dy
 
 
-gns1['x2'] = x_sh
-gns1['y2'] = y_sh
+gns1['x1'] = x_sh
+gns1['y1'] = y_sh
+
+gns1['H1'] = gns1['H2']
+gns1['dx1'] = gns1['dx2']
+gns1['dy1'] = gns1['dy2']
+
 
 fig, ax = plt.subplots(1,1)
 ax.scatter(gns2['x2'][::100],gns2['y2'][::100] , label = 'Original') 
-ax.scatter(gns1['x2'][::100],gns1['y2'][::100] ,marker = 'x', label = 'Shifted') 
+ax.scatter(gns1['x1'][::100],gns1['y1'][::100] ,marker = 'x', label = 'Shifted') 
 
-bs = 20
+l1 = np.array([gns2['x2'],gns2['y2']]).T
+l2 = np.array([gns1['x1'],gns1['y1']]).T
+ls_com = compare_lists(l1, l2, 20)
+
+diff_mag = gns2['H2'][ls_com['ind_1']]-gns1['H1'][ls_com['ind_2']]
+
+bs = 'auto'
 fig, ax = plt.subplots(1,1)
-ax.hist(gns2['x2']-gns1['x2'],bins = bs)
-sys.exit(74)
+ax.hist(diff_mag, bins = 100, label = '$\overline{\Delta H}$ = %.3f\n$\sigma$ = %.2f'%(np.mean(diff_mag),np.std(diff_mag))) 
+ax.set_xlabel('$\Delta H$')
+ax.legend()
+
+fig, (ax,ax1) = plt.subplots(1,2)
+ax.hist(gns2['x2']-gns1['x1'],bins = bs)
+ax1.hist(gns2['y2']-gns1['y1'],bins = bs)
+ax.set_xlabel('$\Delta x$')
+ax1.set_xlabel('$\Delta y$')
+# sys.exit(77)
 # %%
 # Alignment of the simulated date using different methods
-
-dis_min = 10
-xy = np.array([x,y]).T 
-xy_sh = np.array([x_sh,y_sh]).T 
-ls_com = compare_lists(xy, xy_sh, dis_min)
-
-
-loop = 0
-comom_ls = []
-dic_xy = {}
-dic_Kx ={}
-dic_xy_final = {}
-
-deg_gns = 1
+min_dis = 20
 max_deg = 3
-while deg_gns < max_deg:
-   
-    l1_xy = xy
-    l2_xy = xy_sh
-    comp = compare_lists(l1_xy,l2_xy,dis_min)
-    if len(comom_ls) >1:
-        if comom_ls[-1] <= comom_ls[-2]:
-            try:
-                gns_var[x_2] = dic_xy[f'trans_{loop-2}'][:,0]
-                gns_var[y_2] = dic_xy[f'trans_{loop-2}'][:,1]
-                dic_xy_final['xy_deg%s'%(deg_gns)] = np.array([dic_xy[f'trans_{loop-2}'][:,0],dic_xy[f'trans_{loop-2}'][:,1]]).T            
-                comom_ls =[]
-                dic_xy = {}
-                dic_Kx = {}
-                deg_gns += 1
-                print(f'Number of common star in loop {loop-1} lower tha in loop {loop-2}.\nJupping to degree {deg_gns} ')
-                loop = -1
-                continue
-            except:
-                gns_var[x_2] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,0]
-                gns_var[y_2] = dic_xy_final[f'xy_deg{deg_gns -1}'][:,1]
-                print(f'Number of common star with polynomial degere {deg_gns} decreases after a single iteration.\nUsing the last iteration of degree {deg_gns -1} ')
-                break
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+align_by = 'Polywarp'
+# align_by = '2DPoly'
+gns2_c = gns2[ls_com['ind_1']]
+gns1_c = gns1[ls_com['ind_2']]
+gns1 = gns_alignator(mode = 'one_to_two',  gns_cons = gns2, gns_var = gns1,
+                      align_by = align_by,f_mode = 'W',
+                      d_m = min_dis, max_deg_gns = max_deg, sig_clip = 0.1,
+                      plot = 'yes')
 
 
 

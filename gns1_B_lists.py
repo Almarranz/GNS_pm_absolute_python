@@ -69,7 +69,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib 
 
 
 field_one = 100#This field B6
-chip_one = 4
+chip_one = 1
 field_two = 20
 chip_two = 1
 
