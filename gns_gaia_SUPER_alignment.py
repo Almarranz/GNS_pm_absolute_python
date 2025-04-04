@@ -87,8 +87,8 @@ p_mas = pix_scale*1000#Trnasform pixeles into mas
 gns1['x'] = gns1['x']*factor*p_mas
 gns1['y'] = gns1['y']*p_mas
 
-min_exp = gns1['nexp'] > np.max(gns1['nexp'])*0.25
-gns1 = gns1[min_exp]
+# min_exp = gns1['nexp'] > np.max(gns1['nexp'])*0.25
+# gns1 = gns1[min_exp]
 
 num_bins = 200
 s_xy = np.sqrt(gns1['sl']**2 + gns1['sb']**2)
@@ -119,6 +119,11 @@ ax2.set_xlabel('x [mas]')
 ax2.set_ylabel('y[mas]')
 ax2.axis('scaled')
 
+fig, (ax,ax2)= plt.subplots(2,1)
+ax.scatter(gns1['x'],gns1['y'], s = 0.01)
+ax2.scatter(gns1['l'],gns1['b'], s = 0.01)
+ax.axis('scaled')
+ax2.axis('scaled')
 
 
 fig,ax = plt.subplots(1,1)
@@ -138,13 +143,15 @@ all_chips= chip1 | chip2 | chip3 | chip4
 # all_chips= chip2 | chip3
 
 # gns1 = gns1[chip1]
-gns1 = gns1[all_chips]
+# gns1 = gns1[all_chips]
 # gns1 = gns1[np.logical_not(all_chips)]
 
 
 # ax.scatter(gns1['x'][::N],gns1['y'][::N],s =3)
 ax.scatter(gns1['l'][::N],gns1['b'][::N],s =3)
 ax.axis('equal')
+
+# sys.exit(149)
 
 radec_ = SkyCoord(l = gns1['l'], b = gns1['b'], frame = 'galactic', ).fk5
 Gaia.MAIN_GAIA_TABLE = "gaiadr3.gaia_source" # Select early Data Release 3
@@ -153,14 +160,14 @@ Gaia.ROW_LIMIT = -1  # Ensure the default row limit.
 coord = SkyCoord(ra=np.mean(radec_.ra), dec=np.mean(radec_.dec), unit='degree', frame='icrs',equinox ='J2000',obstime='J2016.0')
 
 
-transf = 'affine'#!!!
-# transf = 'similarity'#!!!1
+# transf = 'affine'#!!!
+transf = 'similarity'#!!!1
 # transf = 'polynomial'#!!!
 
 order_trans = 1
 e_pm = 0.3#!!!
-max_sep = 0.1*u.arcsec#!!!Frist Macthig distance with Gaia 
-d_m = 200 #!!! distance in mas using for compare_lists
+max_sep = 0.05*u.arcsec#!!!Frist Macthig distance with Gaia 
+d_m = 0.08/3600 #!!! distance in mas using for compare_lists
 max_deg = 3#!!! Maximun degree using for the interative polynomial alignment
 clip_in_alig = 'yes'#!!! Perform clipping inside the interative polynomial alignment
 bad_sig  = 3
@@ -169,9 +176,9 @@ align_1 = 'Polywarp'
 f_mode = 'NWnC'
 
 size = 0.35*u.deg
-gaia= Gaia.query_object_async(coord, width= 0.5*size, height=size)
-# gaia_ = Gaia.cone_search((coord.ra, coord.dec),0.5*size)
-# gaia_ = j.get_results()
+# gaia= Gaia.query_object_async(coord, width= 0.5*size, height=size)
+j = Gaia.cone_search_async(coord,radius = 0.5*size)
+gaia = j.get_results()
 id_gaia = np.arange(len(gaia))
 
 gaia['id'] = id_gaia
@@ -229,8 +236,8 @@ ax.scatter(ga_m['l'],ga_m['b'],s = 3, label = f'Gaia matches = {len(ga_m)}')
 ax.legend()
 
 
-diff_l = (gn_m['l'] - ga_m['l'])*u.deg.to(u.arcsec)
-diff_b = (gn_m['b'] - ga_m['b'])*u.deg.to(u.arcsec)
+diff_l = (gn_m['l'] - ga_m['l'])*u.deg.to(u.mas)
+diff_b = (gn_m['b'] - ga_m['b'])*u.deg.to(u.mas)
 
 mask_l, l_liml,h_liml = sigma_clip(diff_l, sigma=3, masked = True, return_bounds= True)
 mask_b, l_limb,h_limb = sigma_clip(diff_b, sigma=3, masked = True, return_bounds= True)
@@ -242,8 +249,8 @@ diff_bc= diff_b[mask_lb]
 # %%
 fig, (ax, ax2) = plt.subplots(1,2)
 ax.set_title(f'Matches = {len(diff_lc)}')
-ax.hist(diff_lc, histtype = 'step',linewidth =1, label = fr'$\Delta$ l = {np.mean(diff_lc): .2f}$\pm$ {np.std(diff_lc): .2f} arcsec' )
-ax2.hist(diff_bc, histtype = 'step',linewidth =1,label = fr'$\Delta$ b = {np.mean(diff_bc): .2f}$\pm$ {np.std(diff_bc): .2f} arcsec')
+ax.hist(diff_lc, histtype = 'step',linewidth =1, label = fr'$\Delta$ l = {np.mean(diff_lc): .2f}$\pm$ {np.std(diff_lc): .2f} mas' )
+ax2.hist(diff_bc, histtype = 'step',linewidth =1,label = fr'$\Delta$ b = {np.mean(diff_bc): .2f}$\pm$ {np.std(diff_bc): .2f} mas')
 ax.hist(diff_l,color = 'k', alpha = 0.05)
 ax2.hist(diff_b,color = 'k', alpha = 0.05)
 ax.axvline(l_liml, color = 'r', ls = 'dashed')
@@ -299,19 +306,63 @@ ax.scatter(ga_m['l'],ga_m['b'], marker = '*', label = 'Gaia')
 xy_gn_t = p(xy_gn)
 ax.scatter(xy_gn_t[:,0],xy_gn_t[:,1], label = 'GNS1_t',s=2)
 ax.legend()
-gn_xy = np.array([gns1['x'],gns1['y']]).T
+# gn_xy = np.array([gns1['x'],gns1['y']]).T
+gn_xy = np.array([gns1['l'],gns1['b']]).T
 gn_xyt = p(gn_xy)
-gns1['x'] = gn_xyt[:,0] 
-gns1['y'] = gn_xyt[:,1] 
-gns1['x'] = gn_xyt[:,0] 
-gns1['y'] = gn_xyt[:,1] 
+
+# gns1['x'] = gn_xyt[:,0] 
+# gns1['y'] = gn_xyt[:,1] 
+
+
+gns1['l'] = gn_xyt[:,0] 
+gns1['b'] = gn_xyt[:,1] 
 ax.axis('equal')
 
 
-sys.exit(278)
-s_ls = compare_lists(np.array([gns1['x'],gns1['y']]).T, np.array([gaia['x'],gaia['y']]).T, d_m)
+
+# # s_ls = compare_lists(np.array([gns1['x'],gns1['y']]).T, np.array([gaia['x'],gaia['y']]).T, d_m)
+# s_ls = compare_lists(np.array([gns1['l'],gns1['b']]).T, np.array([gaia['l'],gaia['b']]).T, d_m)
+# print(len(s_ls))
+# gn_m1 = gns1[s_ls['ind_1']]
+# ga_m1 = gaia[s_ls['ind_2']]
+
+ga_c = SkyCoord(l = gaia['l'], b = gaia['b'], unit = 'degree',frame = 'galactic' )
+gn_c= SkyCoord(l= gns1['l'], b=gns1['b'],unit = 'degree', frame = 'galactic')
+# gns1_coor_match = gns1_coor_fg.transform_to('icrs')
+idx,d2d,d3d = ga_c.match_to_catalog_sky(gn_c)# ,nthneighbor=1 is for 1-to-1 match
+sep_constraint = d2d < max_sep
+ga_m1 = gaia[sep_constraint]
+gn_m1 = gns1[idx[sep_constraint]]
+# sys.exit(319)
 # %%
-gns1 = alignator(1, gns1, gaia, s_ls, d_m, max_deg =max_deg, clipping = clip_in_alig, align_by = align_1, f_mode = f_mode, plot = 'yes')
+
+
+diff_l = (gn_m1['l'] - ga_m1['l'])*u.deg.to(u.mas)
+diff_b = (gn_m1['b'] - ga_m1['b'])*u.deg.to(u.mas)
+
+mask_l, l_liml,h_liml = sigma_clip(diff_l, sigma=3, masked = True, return_bounds= True)
+mask_b, l_limb,h_limb = sigma_clip(diff_b, sigma=3, masked = True, return_bounds= True)
+
+mask_lb = np.logical_and(np.logical_not(mask_l.mask), np.logical_not(mask_b.mask))
+
+diff_lc= diff_l[mask_lb]
+diff_bc= diff_b[mask_lb]
+
+fig, (ax, ax2) = plt.subplots(1,2)
+# ax.set_title(f'Matches = {len(diff_lc)}')
+ax.set_title(f'Matches = {len(gn_m1)}')
+ax.hist(diff_lc, histtype = 'step',linewidth =1, label = fr'$\Delta$ l = {np.mean(diff_lc): .3f}$\pm$ {np.std(diff_lc): .3f} mas' )
+ax2.hist(diff_bc, histtype = 'step',linewidth =1,label = fr'$\Delta$ b = {np.mean(diff_bc): .3f}$\pm$ {np.std(diff_bc): .3f} mas')
+# ax.hist(diff_l,color = 'k', alpha = 0.05)
+# ax2.hist(diff_b,color = 'k', alpha = 0.05)
+ax.axvline(l_liml, color = 'r', ls = 'dashed')
+ax.axvline(h_liml, color = 'r', ls = 'dashed')
+ax2.axvline(l_limb, color = 'r', ls = 'dashed')
+ax2.axvline(h_limb, color = 'r', ls = 'dashed')
+ax.legend()
+ax2.legend()
+ax.set_xlabel(r'$\Delta l$[mas]')
+ax2.set_xlabel(r'$\Delta b$[mas]')
 
 
 
@@ -320,8 +371,8 @@ gns1 = alignator(1, gns1, gaia, s_ls, d_m, max_deg =max_deg, clipping = clip_in_
 
 
 
-
-
+# %%
+# gns1 = alignator(1, gns1, gaia, s_ls, d_m, max_deg =max_deg, clipping = clip_in_alig, align_by = align_1, f_mode = f_mode, plot = 'yes')
 
 
 
