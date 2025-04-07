@@ -79,9 +79,8 @@ IPython.get_ipython().run_line_magic('matplotlib', 'inline')
 field_one = 20
 chip_one = 0
 epoch = 2
-
 GNS='/Users/amartinez/Desktop/PhD/HAWK/GNS_%s/lists/%s/chip%s/'%(epoch, field_one, chip_one)
-
+pruebas = '/Users/amartinez/Desktop/PhD/HAWK/GNS_pm_scripts/pruebas/'
 
 # gns1=  Table.read(GNS + 'stars_calibrated_H_chip%s.ecsv'%(chip_one),  format = 'ascii.ecsv')
 gns1=  Table.read(GNS + 'stars_calibrated_H_chip%s.ecsv'%(chip_one),  format = 'ascii.ecsv')
@@ -91,7 +90,7 @@ p_mas = pix_scale*1000#Trnasform pixeles into mas
 gns1['x'] = gns1['x']*factor*p_mas
 gns1['y'] = gns1['y']*p_mas
 
-min_exp = gns1['nexp'] > np.max(gns1['nexp'])*0
+min_exp = gns1['nexp'] > np.max(gns1['nexp'])*0.5
 gns1 = gns1[min_exp]
 
 mag_mask = (gns1['H'] > 12) & (gns1['H'] < 17)
@@ -167,13 +166,13 @@ coord = SkyCoord(ra=np.mean(radec_.ra), dec=np.mean(radec_.dec), unit='degree', 
 
 
 # transf = 'affine'#!!!
-# transf = 'similarity'#!!!1
+transf = 'similarity'#!!!1
 # transf = 'polynomial'#!!!
-transf = 'shift'#!!!
+# transf = 'shift'#!!!
 # 
 order_trans = 1
-e_pm = 0.5#!!!
-max_sep = 20*u.mas#!!!Frist Macthig distance with Gaia 
+e_pm = 0.1#!!!
+max_sep = 100*u.mas#!!!Frist Macthig distance with Gaia 
 d_m = 0.08/3600 #!!! distance in mas using for compare_lists
 max_deg = 3#!!! Maximun degree using for the interative polynomial alignment
 clip_in_alig = 'yes'#!!! Perform clipping inside the interative polynomial alignment
@@ -183,32 +182,38 @@ align_1 = 'Polywarp'
 f_mode = 'NWnC'
 
 
+try:
+    gaia = Table.read(pruebas + 'gaia_f%s_ep%s.ecsv'%(field_one,epoch), format = 'ascii.ecsv')
+    print('Gaia from file')
+except:
+    print('Gaia from web')
+    size = 0.35*u.deg
+    # gaia= Gaia.query_object_async(coord, width= 0.5*size, height=size)
+    j = Gaia.cone_search_async(coord,radius = 0.5*size)
+    gaia = j.get_results()
+    gaia.write(pruebas + 'gaia_f%s_ep%s.ecsv'%(field_one,epoch), format = 'ascii.ecsv', overwrite = True)
 
-size = 0.35*u.deg
-# gaia= Gaia.query_object_async(coord, width= 0.5*size, height=size)
-j = Gaia.cone_search_async(coord,radius = 0.5*size)
-gaia = j.get_results()
 id_gaia = np.arange(len(gaia))
 
 
 
 
 gaia['id'] = id_gaia
-# If you get gaia_ from the Gaia website use "duplicated_source= False"
-# gaia_good = filter_gaia_data(
-#     gaia_table=gaia,
-#     astrometric_params_solved=31,
-#     duplicated_source= False,
-#     parallax_over_error_min=-10,
-#     astrometric_excess_noise_sig_max=2,
-#     phot_g_mean_mag_min= None,
-#     phot_g_mean_mag_max= 13,
-#     pm_min=0,
-#     pmra_error_max= e_pm,
-#     pmdec_error_max=e_pm
-#     )
+# If you get gaia_ from the Gaia w1ebsite use "duplicated_source= False"
+gaia_good = filter_gaia_data(
+    gaia_table=gaia,
+    astrometric_params_solved=31,
+    duplicated_source= False,
+    parallax_over_error_min=-10,
+    astrometric_excess_noise_sig_max=2,
+    phot_g_mean_mag_min= None,
+    phot_g_mean_mag_max= 13,
+    pm_min=0,
+    pmra_error_max= e_pm,
+    pmdec_error_max=e_pm
+    )
 
-# gaia = gaia_good
+gaia = gaia_good
 
 gaia_coord = SkyCoord(l = gaia['l'], b = gaia['b'], frame = 'galactic')
 coord = coord.transform_to('galactic')
@@ -347,7 +352,7 @@ fig, ax = plt.subplots(1,1)
 ax.scatter(gn_m['l'],gn_m['b'], marker = '*', label = 'GNS1')
 ax.scatter(ga_m['l'],ga_m['b'], marker = '*', label = 'Gaia')
 xy_gn_t = p(xy_gn)
-ax.scatter(xy_gn_t[:,0],xy_gn_t[:,1], label = 'GNS1_t',s=2)
+ax.scatter(xy_gn_t[:,0],xy_gn_t[:,1], label = 'GNS_t',s=2)
 ax.legend()
 # gn_xy = np.array([gns1['x'],gns1['y']]).T
 gn_xy = np.array([gns1['l'],gns1['b']]).T
@@ -396,6 +401,7 @@ fig, (ax, ax2) = plt.subplots(1,2)
 # ax.set_title(f'Matches = {len(diff_lc)}')
 # ax.set_title(f'Matches = {len(gn_m1)}')
 ax.set_title(r'GNS vs Gaia')
+ax2.set_title(f'Matches = {len(diff_lc)}')
 ax.hist(diff_lc, histtype = 'step',linewidth =1, label = fr'$\Delta$l = {np.mean(diff_lc): .3f}, $\sigma$ = {np.std(diff_lc): .3f} mas' )
 ax2.hist(diff_bc, histtype = 'step',linewidth =1,label = fr'$\Delta$b = {np.mean(diff_bc): .3f}, $\sigma$ = {np.std(diff_bc): .3f} mas')
 # ax.hist(diff_l,color = 'k', alpha = 0.05)
