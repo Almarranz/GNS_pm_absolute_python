@@ -22,7 +22,7 @@ import astropy.coordinates as ap_coor
 from astropy.io import fits
 from astropy import wcs
 from astropy.wcs import WCS
-import alphashape
+# import alphashape
 from astropy.table import Table
 # import species
 # %%plotting pa    metres

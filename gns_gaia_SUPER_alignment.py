@@ -75,10 +75,9 @@ plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib 
 IPython.get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-
-field_one = 20
+field_one = 60
 chip_one = 0
-epoch = 2
+epoch = 1
 GNS='/Users/amartinez/Desktop/PhD/HAWK/GNS_%s/lists/%s/chip%s/'%(epoch, field_one, chip_one)
 pruebas = '/Users/amartinez/Desktop/PhD/HAWK/GNS_pm_scripts/pruebas/'
 
@@ -90,7 +89,7 @@ p_mas = pix_scale*1000#Trnasform pixeles into mas
 gns1['x'] = gns1['x']*factor*p_mas
 gns1['y'] = gns1['y']*p_mas
 
-min_exp = gns1['nexp'] > np.max(gns1['nexp'])*0.5
+min_exp = gns1['nexp'] > np.max(gns1['nexp'])*0
 gns1 = gns1[min_exp]
 
 mag_mask = (gns1['H'] > 12) & (gns1['H'] < 17)
@@ -172,7 +171,7 @@ transf = 'similarity'#!!!1
 # 
 order_trans = 1
 e_pm = 0.1#!!!
-max_sep = 100*u.mas#!!!Frist Macthig distance with Gaia 
+max_sep = 200*u.mas#!!!Frist Macthig distance with Gaia 
 d_m = 0.08/3600 #!!! distance in mas using for compare_lists
 max_deg = 3#!!! Maximun degree using for the interative polynomial alignment
 clip_in_alig = 'yes'#!!! Perform clipping inside the interative polynomial alignment

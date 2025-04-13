@@ -123,7 +123,7 @@ max_sig = 0.5
 d_m = 12 #!!! pixeles are in mas
 max_sep = 0.02*u.arcsec#!!!
 max_deg = 4
-factor = 1# Multiplies the x coordinate by this (1 or -1)
+factor = -1# Multiplies the x coordinate by this (1 or -1)
 # transf = 'affine'
 transf = 'similarity'
 # transf = 'polynomial'
@@ -149,7 +149,7 @@ deg_gns = 1
 d_m_gns = 15
 d_m_pm = 100
 
-e_pm = 0.2#!!! Maximum pm error for Gaia ref stars
+e_pm = 0.3#!!! Maximum pm error for Gaia ref stars
 
 # =============================================================================
 
@@ -261,9 +261,12 @@ width2 = ancho2*0.053*u.arcsec
 height2 = alto2*0.053*u.arcsec
 
 
-j = Gaia.cone_search_async(coord, np.sqrt((width2)**2+height2**2)/2)
+# j = Gaia.cone_search_async(coord, np.sqrt((width2)**2+height2**2)/2)
 # j = Gaia.cone_search_async(coord, 1000*u.arcsec)
-gaia_ = j.get_results()
+size = 0.2*u.deg
+j = Gaia.query_object_async(coord, width= 0.5*size, height=size)
+gaia_ = j
+# gaia_ = j.get_results()
 gaia_.write(pruebas1 + 'gaia1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii', overwrite = True)
 
 # If you get gaia_ from the Gaia website use "duplicated_source= False"
@@ -470,7 +473,7 @@ gns1_xy = np.array([gns1['x1'],gns1['y1']]).T
 gns1_xyt = p(gns1_xy)
 gns1['x1'] = gns1_xyt[:,0] 
 gns1['y1'] = gns1_xyt[:,1] 
-
+# sys.exit(473)
  # %%
 fig, ax = plt.subplots(1,1)
 ax.set_title(f'GNS1 f{field_one} c{chip_one}')
@@ -486,8 +489,9 @@ ax.legend()
 print(30*'-'+f'\nCommon GNS1 and Gaia after initial transformation = f{len(s_ls)}')
 # %%
 
-gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg =max_deg, clipping = clip_in_alig, align_by = align_1, f_mode = f_mode)
 
+gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg =max_deg, clipping = clip_in_alig, align_by = align_1, f_mode = f_mode)
+sys.exit(473)
 # gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg, clipping = None, plot = '')
 # %%
 

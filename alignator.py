@@ -18,10 +18,14 @@ from astropy.modeling import models, fitting
 def alignator(survey,gns,gaia,s_ls, d_m,max_deg, align_by = None,f_mode = None, plot = None, clipping = None, sig_clip = None):
     # Proceed with the iterative alignment process from an initial common lists
     
-    id1 = f'x{survey}'
-    id2 = f'y{survey}'
-    dx = f'dx{survey}'
-    dy = f'dy{survey}'
+    # id1 = f'x{survey}'
+    # id2 = f'y{survey}'
+    # dx = f'dx{survey}'
+    # dy = f'dy{survey}'
+    id1 = 'x'
+    id2 = 'y'
+    dx = 'sl'
+    dy = 'sb‡'
     loop =1
     deg = 1
 
@@ -58,7 +62,7 @@ def alignator(survey,gns,gaia,s_ls, d_m,max_deg, align_by = None,f_mode = None, 
             ax1.axvline(ly_lim, color = 'red', ls = 'dashed')
             ax1.axvline(hy_lim, color = 'red', ls = 'dashed')
            
-            ax1.hist(diff_y, histtype = 'step', label = '$\overline{y} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_y),np.std(diff_y)))
+            ax1.hist(diff_y, histtype = 'step', label = '$\overline{y} = %.2f$\n$\sigma y$ =%.2f'%(np.mean(diff_y),np.std(diff_y)))
             
             ax.set_xlabel('$\Delta x$ [mas]')
             ax1.set_xlabel('$\Delta y$ [mas]')
@@ -68,7 +72,7 @@ def alignator(survey,gns,gaia,s_ls, d_m,max_deg, align_by = None,f_mode = None, 
                 diff_mx = diff_x[np.logical_not(mask_x.mask)]
                 diff_my = diff_y[np.logical_not(mask_y.mask)]
                 ax.hist(diff_mx , color = 'k', alpha = 0.5, lw = 10,label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_mx),np.std(diff_mx)))
-                ax1.hist(diff_my, color = 'k', alpha = 0.5, lw = 10,label = '$\overline{x} = %.2f$\n$\sigma x$ =%.2f'%(np.mean(diff_my),np.std(diff_my)))
+                ax1.hist(diff_my, color = 'k', alpha = 0.5, lw = 10,label = '$\overline{y} = %.2f$\n$\sigma y$ =%.2f'%(np.mean(diff_my),np.std(diff_my)))
             ax.legend()
             ax1.legend()
         if clipping is not None:

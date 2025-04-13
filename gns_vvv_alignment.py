@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Created on Mon Jan 13 12:04:56 2025
+
+@author: amartinez
+"""
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
 Created on Sun Dec 11 10:30:27 2022
 
 @author: amartinez
 """
 
-# Generates offsets for Gaia stars and astroaligned with xy coordinates in GNS1
+# Generates offsets for VVV stars and astroaligned with xy coordinates in GNS1
 
-# Here we are going to align GNS (1 and 2) to Gaia reference frame for the 
+# Here we are going to align GNS (1 and 2) to VVV reference frame for the 
 # each of tha gns epochs
 import numpy as np
 from astropy import units as u
@@ -85,8 +93,8 @@ IPython.get_ipython().run_line_magic('matplotlib', 'inline')
 # chip_two = 1
 pruebas2 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_2absolute_python/pruebas/'
 pruebas1 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/pruebas/'
-gaia_list1 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/Gaia_lists/'
-gaia_list2 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_2absolute_python/Gaia_lists/'
+vvv_list1 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/VVV_lists/'
+vvv_list2 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_2absolute_python/VVV_lists/'
 tmp1 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_1absolute_python/tmp/'
 tmp2 = '/Users/amartinez/Desktop/PhD/HAWK/GNS_2absolute_python/tmp/'
 Hos_cat = '/Users/amartinez/Desktop/PhD/Arches_and_Quintuplet_Hosek/'
@@ -114,8 +122,8 @@ GNS_2off='/Users/amartinez/Desktop/PhD/HAWK/GNS_2absolute_python/lists/%s/chip%s
 gns1_im = GNS_1 +   'calibrated_stars_%s.fits'%(chip_one)
 
 # delete previous catalogs
-pm_delete_id = pm_folder_off + 'ID_pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
-pm_delete = pm_folder_off + 'pm_GaiaRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
+pm_delete_id = pm_folder_off + 'ID_pm_vvvRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
+pm_delete = pm_folder_off + 'pm_vvvRF_ep1_f%sc%s_ep2_f%sc%s**.txt'%(field_one, chip_one, field_two, chip_two)
 
 # ===============================Constants=====================================
 max_sig = 0.5
@@ -169,14 +177,14 @@ bad_both = None
 np.savetxt(tmp1 + 'bad1_f%sc%s.txt'%(field_one,chip_one),np.array([]).T, fmt='%.i')
 np.savetxt(tmp2 + 'bad2_f%sc%s.txt'%(field_two,chip_two),np.array([]).T, fmt='%.i')
 
-bad_both =  [[45.0, 12.0, 9.0, 14.0, 48.0, 13.0]]
-bad1 =  [52.0,53]
-bad2 =  [48.0, 3.0, 7.0, 19.0]
+bad_both =  [[]]
+bad1 =  []
+bad2 =  []
 if bad_both is not None:
-    bad1 = np.unique(bad1 + bad_both[0])
-    bad2 = np.unique(bad2 + bad_both[0])
-    # bad1 = np.unique([bad1 + bad2][0] + bad_both[0])
-    # bad2 = bad1
+    # bad1 = np.unique(bad1 + bad_both[0])
+    # bad2 = np.unique(bad2 + bad_both[0])
+    bad1 = np.unique([bad1 + bad2][0] + bad_both[0])
+    bad2 = bad1
 
 
 if bad1 is not None:
@@ -217,135 +225,124 @@ with open(pruebas1 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_one, chip_one),'w') as
 with open(pruebas1 + 'ZP_centroid_gns1_f%sc%s.reg'%(field_one, chip_one),'a') as file:
     file.write('circle(%s,%s,0.5")'%(x_cent, y_cent))
 
+tvvv = 2012.29578304
+time_obj = Time(tvvv, format='decimalyear')
+vvv_date = time_obj.to_value('iso', subfmt='date')
 
 
 
 if field_one == 7 or field_one == 12 or field_one == 10 or field_one == 16:
-    t_gns1 = Time(['2015-06-07T00:00:00','2016-01-01T00:00:00'],scale='utc')
+    t_gns1 = Time(['2015-06-07T00:00:00',vvv_date],scale='utc')
 if field_one == 60:
-    t_gns1 = Time(['2016-06-13T00:00:00','2016-01-01T00:00:00'],scale='utc')
+    t_gns1 = Time(['2016-06-13T00:00:00',vvv_date],scale='utc')
 if field_one == 100:
-    t_gns1 = Time(['2016-05-20T00:00:00','2016-01-01T00:00:00'],scale='utc')
+    t_gns1 = Time(['2016-05-20T00:00:00',vvv_date],scale='utc')
 if field_two == 7 or field_two == 5:
-    t_gns2 = Time(['2022-05-27T00:00:00','2016-01-01T00:00:00'],scale='utc')
+    t_gns2 = Time(['2022-05-27T00:00:00',vvv_date],scale='utc')
 if field_two == 4:
-    t_gns2 = Time(['2022-04-05T00:00:00','2016-01-01T00:00:00'],scale='utc')
+    t_gns2 = Time(['2022-04-05T00:00:00',vvv_date],scale='utc')
 if field_two == 20:
-    t_gns2 = Time(['2022-07-25T00:00:00','2016-01-01T00:00:00'],scale='utc')
+    t_gns2 = Time(['2022-07-25T00:00:00',vvv_date],scale='utc')
 
 
 del_t = t_gns2[0]-t_gns1[0]
-Gaia.MAIN_GAIA_TABLE = "gaiadr3.gaia_source" # Select early Data Release 3
-# Gaia.MAIN_GAIA_TABLE = "gaiaedr3.gaia_source" # Select early Data Release 3
-Gaia.ROW_LIMIT = -1  # Ensure the default row limit.
-coord = SkyCoord(ra=radec_.ra, dec=radec_.dec, unit='degree', frame='icrs',equinox ='J2000',obstime='J2016.0')
+
+VVV = Table.read('/Users/amartinez/Desktop/PhD/Catalogs/VVV/b333/PMS/b333.dat', format = 'ascii')
+
+gns1_coor = SkyCoord(ra = gns1['ra1'],dec = gns1['Dec1'],unit = 'degree',
+                     frame = 'fk5', obstime = 'J2015.4301')
+
+search_r = 50*u.arcsec
+
+ra_c = np.mean(gns1['ra1'])
+dec_c = np.mean(gns1['Dec1'])
 
 
-ancho2 = header['NAXIS1']
-alto2 = header['NAXIS2']
-width2 = ancho2*0.053*u.arcsec
-height2 = alto2*0.053*u.arcsec
+rad = 200/3600
 
-e_pm = 0.3
+delta_ra = (VVV['ra'] - ra_c) * np.cos(np.radians(dec_c))
+delta_dec = VVV['dec'] - dec_c
 
-j = Gaia.cone_search_async(coord, np.sqrt((width2)**2+height2**2)/2)
-# j = Gaia.cone_search_async(coord, 1000*u.arcsec)
-gaia_ = j.get_results()
-gaia_.write(pruebas1 + 'gaia1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii', overwrite = True)
+# Calculate the angular distance
+angular_distance = np.sqrt(delta_ra**2 + delta_dec**2)
 
-# If you get gaia_ from the Gaia website use "duplicated_source= False"
-gaia_com = gaia_
-gaia_good = filter_gaia_data(
-    gaia_table=gaia_,
-    astrometric_params_solved=31,
-    duplicated_source= False,
-    parallax_over_error_min=-10,
-    astrometric_excess_noise_sig_max=2,
-    phot_g_mean_mag_min= None,
-    phot_g_mean_mag_max= 13,
-    pm_min=0,
-    pmra_error_max=e_pm,
-    pmdec_error_max=e_pm
-    )
+# Select rows where the distance is within the radius
+within_radius = angular_distance <= rad
+
+vvv_c = VVV[within_radius]
+
+Ks_max = None
+Ks_min = None
+vvv_good = filter_vvv_data(vvv_c,
+                    pmRA = 'good',
+                    pmDE = None,
+                    epm = 0.95,
+                    ok = 'yes',
+                    max_Ks = Ks_max,
+                    min_Ks = Ks_min,
+                    center = 'yes'
+                    )
 
 
-# gaia_com_ind = np.isin(gaia_['source_id'],gaia_hos[1].data['source_id_2'])
-# gaia_com = gaia_[gaia_com_ind]
 
+fig, ax = plt.subplots(1,1)
+ax.scatter(vvv_c['ra'],vvv_c['dec'])
+ax.scatter(gns1['ra1'], gns1['Dec1'], alpha = 0.1)
 
-# gaia_ = Table.read(pruebas1 + 'gaia1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii')
-# # If you get gaia_ from a stored gaia Table, use "duplicated_source= 'False'"
-# gaia_good = filter_gaia_data(
-#     gaia_table=gaia_,
-#     astrometric_params_solved=31,
-#     duplicated_source= 'False',
-#     parallax_over_error_min=-10,
-#     astrometric_excess_noise_sig_max=2,
-#     phot_g_mean_mag_min= None,
-#     phot_g_mean_mag_max= 13,
-#     pm_min=0,
-#     pmra_error_max=e_pm,
-#     pmdec_error_max=e_pm
-#     )
-
-gaia_coord =  SkyCoord(ra=gaia_good['ra'], dec=gaia_good['dec'],unit = 'degree',frame = 'icrs',obstime='J2016.0')
-
-
-np.savetxt(pruebas1 + 'gaia.txt', np.array([gaia_good['ra'],gaia_good['dec']]).T)
 # %
 delta_t1 = t_gns1[0] - t_gns1[1]
 delta_t2 = t_gns2[0] - t_gns2[1]
 # delta_t1 =  t_gns1[0] - t_gns1[0]
 # delta_t2 =  t_gns2[0] - t_gns2[0]
 
-GaiaCoord = SkyCoord(ra=gaia_good['ra'],
-                   dec=gaia_good['dec'],
+vvvCoord = SkyCoord(ra=vvv_good['ra'],
+                   dec=vvv_good['dec'],
                    unit = 'degree',
                    frame='icrs',
                      equinox = 'J2000',
-                    obstime='J2016.0')
-if field_one == 7 and chip_one ==4:
-    # center_arc = SkyCoord(ra = '17h45m50.65020s', dec = '-28d49m19.51468s', equinox = 'J2000') if choosen_cluster =='Arches' else SkyCoord('17h46m14.68579s', '-28d49m38.99169s', equinox = 'J2000')#Quintuplet
-    radec_ = SkyCoord(ra = '17h45m50.65020s', dec = '-28d49m19.51468s', equinox = 'J2000')
-    print('Choosing Arches center as reference point')
-if field_one == 10 and chip_one ==2:
-    # center_arc = SkyCoord(ra = '17h45m50.65020s', dec = '-28d49m19.51468s', equinox = 'J2000') if choosen_cluster =='Arches' else SkyCoord('17h46m14.68579s', '-28d49m38.99169s', equinox = 'J2000')#Quintuplet
-    radec_ = SkyCoord('17h46m14.68579s', '-28d49m38.99169s', equinox = 'J2000')#Quintuplet
-    print('Choosing Arches center as reference point')
+                    obstime=f'J{tvvv}')
 
 # Asigns Offsets coordinates to Gaia stars, moves then  and return the
 # corresponding ra dec coordenates using spherical_offsets_by method
 radec_ = radec_.transform_to('icrs')
-ragai1_off,decgai1_off = radec_.spherical_offsets_to(GaiaCoord.frame)
-ragai1_off = (ragai1_off.to(u.mas)).value + (np.array(gaia_good['pmra'])*delta_t1.to(u.yr)).value
-decgai1_off = (decgai1_off.to(u.mas)).value + (np.array(gaia_good['pmdec'])*delta_t1.to(u.yr)).value
-GaiaGNSCoord1 = radec_.spherical_offsets_by(ragai1_off*u.mas, decgai1_off*u.mas)
+ra_vvv1,dec_vvv1 = radec_.spherical_offsets_to(vvvCoord.frame)
+ra_vvv1 = (ra_vvv1.to(u.mas)).value + (np.array(vvv_good['pmRA'])*delta_t1.to(u.yr)).value
+dec_vvv1 = (dec_vvv1.to(u.mas)).value + (np.array(vvv_good['pmDEC'])*delta_t1.to(u.yr)).value
+GaiaGNSCoord1 = radec_.spherical_offsets_by(ra_vvv1*u.mas, dec_vvv1*u.mas)
 # GaiaGNSCoord1  = GaiaCoord#!!! This line DOES NOT move the Gaia stars to the GNS1 epcoh
 
+
+vvv_good['x'] = ra_vvv1
+vvv_good['y'] = dec_vvv1
 # Could be this transformation of Gaia stars (from the sky to the plane, and back) a source of error??
 
 # %
 
 # Propagation of error in gaia
-dx_des = np.sqrt(gaia_good['ra_error']**2 + (delta_t1.to(u.yr).value*gaia_good['pmra_error'])**2)
-dy_des = np.sqrt(gaia_good['dec_error']**2 + (delta_t1.to(u.yr).value*gaia_good['pmra_error'])**2)
+# VVV table does not have error for the RA and Dec position,
+# so for now I leave the uncertainty for the propagation as the error of the velocity 
+dx_des = vvv_good['epmRA']
+dy_des = vvv_good['epmDEC']
+# dx_des = np.sqrt(vvv_good['ra_error']**2 + (delta_t1.to(u.yr).value*vvv_good['epmRa'])**2)
+# dy_des = np.sqrt(vvv_good['dec_error']**2 + (delta_t1.to(u.yr).value*vvv_good['epmDEC'])**2)
 dxy_des = np.sqrt(dx_des**2 + dy_des**2) 
 # %
+
 # Here we are going to cut the Gaia stars over the area of GNS1
-gaia_coord_gal = gaia_coord.galactic
+vvvCoord_gal = vvvCoord.galactic
 gns1_coord_gal = gns1_coor.galactic
 
-lg = gaia_coord_gal.l.wrap_at('360d')
+lg = vvvCoord_gal.l.wrap_at('360d')
 l1 = gns1_coord_gal.l.wrap_at('360d')
 
 
-buenos1 = np.where((gaia_coord_gal.l>min(gns1_coord_gal.l)) & (gaia_coord_gal.l<max(gns1_coord_gal.l)) &
-                   (gaia_coord_gal.b>min(gns1_coord_gal.b)) & (gaia_coord_gal.b<max(gns1_coord_gal.b)))
+buenos1 = np.where((vvvCoord_gal.l>min(gns1_coord_gal.l)) & (vvvCoord_gal.l<max(gns1_coord_gal.l)) &
+                   (vvvCoord_gal.b>min(gns1_coord_gal.b)) & (vvvCoord_gal.b<max(gns1_coord_gal.b)))
 
 fig, ax = plt.subplots(1,1,figsize =(6,6))
 # ax.scatter(lg, gaia_coord_gal.b, label ='Gaia stars')
 ax.scatter(l1, gns1_coord_gal.b, label = 'GNS1 (f%s c%s)'%(field_one, chip_one) )  
-ax.scatter(lg[buenos1], gaia_coord_gal[buenos1].b, label ='Gaia over GNS1')
+ax.scatter(lg[buenos1], vvvCoord_gal[buenos1].b, label ='VVV over GNS1')
 ax.invert_xaxis()
 ax.set_xlabel('l[deg]', fontsize = 20)
 ax.set_ylabel('b [deg]',fontsize = 20)
@@ -353,59 +350,38 @@ ax.axis('equal')
 ax.legend()
 
 
-
 # Each gaia stars get its own ID
-ga1_id = np.arange(len(gaia_good[buenos1]))
-gaia_np1 =np.array([GaiaGNSCoord1[buenos1].ra.value, GaiaGNSCoord1[buenos1].dec.value,
-                     dx_des[buenos1], dy_des[buenos1],
-                     ragai1_off[buenos1], decgai1_off[buenos1],
-                     np.array(gaia_good['pmra'][buenos1]), np.array(gaia_good['pmdec'][buenos1]),
-                     gaia_good['pmra_error'][buenos1].value, gaia_good['pmdec_error'][buenos1].value,
-                     gaia_good['phot_g_mean_mag'][buenos1].value,
-                     ga1_id]).T
+vvv1_id = np.arange(len(vvv_good[buenos1]))
+
+vvv1 = vvv_good[buenos1]
+vvv1['id1'] = vvv1_id
+
 # Saves two differnte lists: one with All gaia stars and the other after the 
 # 3sigma clipping done when comparing with Gaia.
-gaia1 = Table(gaia_np1, names = ('ra',	'dec',	'dra',	'ddec',	'x',	'y',	'pmra',	'pmdec',	'dpmra',	'dpmdec','phot_g_mean_mag','gaia1_id'))
 
-gaia1.write(GNS_1off + 'ALL_gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii', overwrite = True) 
+vvv1.write(GNS_1off + 'ALL_gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one), format = 'ascii', overwrite = True) 
 
-with open(gaia_list1+ 'gaia_gns1_f%sc%s_on_gns2_f%sc%s_sxy%s.reg'%(field_one,chip_one,field_two,chip_two,max_sig), 'w') as f:
+
+with open(vvv_list1+ 'vvv_gns1_f%sc%s_on_gns2_f%sc%s_sxy%s.reg'%(field_one,chip_one,field_two,chip_two,max_sig), 'w') as f:
     f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=green dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
     f.close
-for gs in range(len(ga1_id)):
-    with open(gaia_list1+ 'gaia_gns1_f%sc%s_on_gns2_f%sc%s_sxy%s.reg'%(field_one,chip_one,field_two,chip_two,max_sig), 'a') as f:
-        f.write('circle(%s,%s,0.5") \n point(%s,%s) # point=cross \n # text(%s,%s) font="helvetica 24 normal roman" text={%.0f} \n'%(gaia1['ra'][gs], gaia1['dec'][gs],
-                                                                        gaia1['ra'][gs], gaia1['dec'][gs],
-                                                                        gaia1['ra'][gs]+0.00013, gaia1['dec'][gs]+0.00013,
+for gs in range(len(vvv1_id)):
+    with open(vvv_list1+ 'vvv_gns1_f%sc%s_on_gns2_f%sc%s_sxy%s.reg'%(field_one,chip_one,field_two,chip_two,max_sig), 'a') as f:
+        f.write('circle(%s,%s,0.5") \n point(%s,%s) # point=cross \n # text(%s,%s) font="helvetica 24 normal roman" text={%.0f} \n'%(vvv1['ra'][gs], vvv1['dec'][gs],
+                                                                        vvv1['ra'][gs], vvv1['dec'][gs],
+                                                                        vvv1['ra'][gs]+0.00013, vvv1['dec'][gs]+0.00013,
                                                                         gs))
 if bad1 is not None:
     if clip_bad1 == 'yes':#TODO
-        del_1 = np.isin(gaia1['gaia1_id'], bad1)
-        gaia1 = gaia1[~del_1]
-
-
-    # gaia_np1 = np.delete(gaia_np1,bad1, axis =0)
-# np.savetxt(GNS_1off + 'gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one), gaia_np1, fmt ='%.8f', 
-#            header = 'ra, dec, dra(mas), ddec(mas), x, y, pmra(mas/yr), pmdec, dpmra(mas/yr), dpmdec,dradec')
-gaia1.write(GNS_1off + 'gaia_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one),format = 'ascii',overwrite = True)
+        del_1 = np.isin(vvv1['id1'], bad1)
+        vvv1 = vvv1[np.logical_not(del_1)]
+vvv1.write(GNS_1off + 'vvv_refstars_on_gns1_f%sc%s.txt'%(field_one,chip_one),format = 'ascii',overwrite = True)
 
 ID_gns1 = np.arange(len(gns1[buenos1]))
 
-# with open(pruebas1+ 'gns1_around_gaiaf%sc%s_sxy%s.reg'%(field_one,chip_one,max_sig), 'w') as f:
-#     f.write('# Region file format: DS9 version 4.1'+"\n"+'global color=blue dashlist=8 3 width=1 font="helvetica 10 normal roman" select=1 highlite=1 dash=0 fixed=0 edit=1 move=1 delete=1 include=1 source=1'+"\n"+'fk5'+'\n')
-#     f.close
 
-# for gst in range(len(gaia_np1)):
-#     m_point = SkyCoord(ra =[gaia_np1[gst][0]], dec  =[gaia_np1[gst][1]],unit ='degree', frame ='icrs', equinox = 'J2000', obstime = 'J2015.43')
-#     idx, d2d, d3d = match_coordinates_sky(m_point, gns1_coor)
-#     # idxc, group_md, d2d,d3d =  ap_coord.search_around_sky( m_point ,gns1_coor, 0.6*u.arcsec)
-#     with open(pruebas1+ 'gns1_around_gaiaf%sc%s_sxy%s.reg'%(field_one,chip_one,max_sig), 'a') as f:
-#         f.write('point(%s,%s) # point = cross \n # text(%s,%s) text={%.0f} \n'%(float(gns1_coor.ra.value[idx]) ,float(gns1_coor.dec.value[idx]),
-#                                                                                 float(gns1_coor.ra.value[idx]) ,float(gns1_coor.dec.value[idx]),
-#                                                                                int(ID_gns1[idx])))
-#         f.close 
 
-#
+
 # %%
 # We select GNS1 foregroud stars and astroaling their pixels coordenates with 
 # the Gaia stars offsets
@@ -416,37 +392,31 @@ gns1_fg = gns1
 
 
 
-gaia1_coord = SkyCoord(ra = gaia1['ra'], dec = gaia1['dec'], unit = 'degree',frame = 'icrs',obstime='J2016.0' )
+vvv1_coord = SkyCoord(ra = vvv1['ra'], dec = vvv1['dec'], unit = 'degree',frame = 'icrs',obstime='J2016.0' )
 gns1_coor_fg= SkyCoord(ra= gns1_fg['ra1']*u.degree, dec=gns1_fg['Dec1']*u.degree, frame = 'fk5',obstime=f'J{t_gns1[0].jyear}')
 gns1_coor_match = gns1_coor_fg.transform_to('icrs')
-idx,d2d,d3d = gaia1_coord.match_to_catalog_sky(gns1_coor_fg,nthneighbor=1)# ,nthneighbor=1 is for 1-to-1 match
+idx,d2d,d3d = vvv1_coord.match_to_catalog_sky(gns1_coor_fg,nthneighbor=1)# ,nthneighbor=1 is for 1-to-1 match
 sep_constraint = d2d < max_sep
-gaia1_match = gaia1[sep_constraint]
+vvv1_match = vvv1[sep_constraint]
 gns1_match = gns1_fg[idx[sep_constraint]]
 
 
 xy_gns1 = np.array([gns1_match['x1'],gns1_match['y1']]).T
-xy_gaia1 = np.array([gaia1_match['x'],gaia1_match['y']]).T
+xy_vvv1 = np.array([vvv1_match['x'],vvv1_match['y']]).T
 
-# p = ski.transform.estimate_transform('polynomial',
-#                                               xy_gns1, 
-#                                               xy_gaia1, order = 1)
-# p = ski.transform.estimate_transform('affine',
-#                                               xy_gns1, 
-#                                               xy_gaia1)
 
 if transf == 'polynomial':
     p = ski.transform.estimate_transform(transf,
                                         xy_gns1, 
-                                        xy_gaia1, order = order_trans)
+                                        xy_vvv1, order = order_trans)
 else:    
     p = ski.transform.estimate_transform(transf,
                                     xy_gns1, 
-                                    xy_gaia1)
+                                    xy_vvv1)
 
 fig, ax = plt.subplots(1,1)
 ax.scatter(gns1_match['x1'],gns1_match['y1'], marker = '*', label = 'GNS1')
-ax.scatter(gaia1_match['x'],gaia1_match['y'], marker = '*', label = 'Gaia')
+ax.scatter(vvv1_match['x'],vvv1_match['y'], marker = '*', label = 'Gaia')
 xy_gns1_t = p( xy_gns1 )
 ax.scatter(xy_gns1_t[:,0],xy_gns1_t[:,1], label = 'GNS1_t',s=2)
 ax.legend()
@@ -459,20 +429,22 @@ gns1['y1'] = gns1_xyt[:,1]
 fig, ax = plt.subplots(1,1)
 ax.set_title(f'GNS1 f{field_one} c{chip_one}')
 ax.scatter(gns1['x1'],gns1['y1'])
-ax.scatter(gaia1['x'],gaia1['y'])
+ax.scatter(vvv1['x'],vvv1['y'])
 
 # pix_scale = 0.1064*0.53
 # d_m = max_sep.value*pix_scale
 
-s_ls = compare_lists(np.array([gns1['x1'],gns1['y1']]).T, np.array([gaia1['x'],gaia1['y']]).T, d_m)
+s_ls = compare_lists(np.array([gns1['x1'],gns1['y1']]).T, np.array([vvv1['x'],vvv1['y']]).T, d_m)
 ax.scatter(s_ls['l1_x'],s_ls['l1_y'],s=20, marker = 'x', label = f'Matching = %s\nbefore = {len(xy_gns1)}'%(len(s_ls['l1_x'])))
 ax.legend()
 print(30*'-'+f'\nCommon GNS1 and Gaia after initial transformation = f{len(s_ls)}')
+
+
 # %%
 
 
-gns1 = alignator(1, gns1, gaia1, s_ls, d_m, max_deg, clipping = clip_in_alig, align_by = align, f_mode = f_mode)
-
+gns1 = alignator(1, gns1, vvv1, s_ls, d_m, max_deg, clipping = clip_in_alig, align_by = align, f_mode = f_mode)
+sys.exit(447)
 # %%
  # Asigns Offsets coordinates to Gaia stars, moves then (epoch 2) and return the
 # corresponding ra dec coordenates using spherical_offsets_by method
@@ -604,7 +576,6 @@ gns2 = alignator(2, gns2, gaia2, s_ls, d_m, max_deg, clipping = clip_in_alig, al
 # %%
 # Promer motion computation
 Ks_mask = (gns1['Ks1'] > Ks_lim[0]) & (gns1['Ks1'] < Ks_lim[1])
-# Ks_mask = (gns1['H1'] > Ks_lim[0]) & (gns1['H1'] < Ks_lim[1])
 gns1 = gns1[Ks_mask]#!!!
 
 gns1_gxy  = np.array([gns1['x1'], gns1['y1']]).T 

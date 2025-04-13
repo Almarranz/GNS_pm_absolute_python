@@ -69,7 +69,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})# a warniing for matplot lib 
 
 
 field_one = 100#This field B6
-chip_one = 1
+chip_one = 4
 field_two = 20
 chip_two = 1
 
@@ -110,6 +110,7 @@ arch_ecu =  SkyCoord('17h46m15.13s', '-28d49m34.7s', frame='icrs',obstime ='J201
 
 GNS_1='/Users/amartinez/Desktop/PhD/HAWK/GNS_1/lists/%s/chip%s/'%(field_one, chip_one)
 GNS_2='/Users/amartinez/Desktop/PhD/HAWK/GNS_2/lists/%s/chip%s/'%(field_two, chip_two)
+# GNS_2="/Volumes/teabag-data/GNS/2021/H/%sHB/photo/chip%s/lists/"%(field_two, chip_two)
 
 
 with open(GNS_2 + 'Reduction_by.txt', 'w') as f:
@@ -176,9 +177,9 @@ gns1_gal = SkyCoord(ra = gns1['ra1'], dec = gns1['Dec1'],
                     obstime = 'J2015.43').galactic
 
 # %%
-gns2_all = Table.read(GNS_2 + 'stars_calibrated_H_chip%s.txt'%(chip_two), names = ('ra2',	'Dec2',	'x2',	'y2',	'f2',	'H2',	'dx2',	'dy2',	'df2',	'dH2'), format = 'ascii')
+gns2_all = Table.read(GNS_2 + 'stars_calibrated_H_chip%s.txt'%(chip_two), names = ('ra2',	'Dec2',	'x2',	'y2',	'f2',	'H2',	'dx2',	'dy2',	'df2',	'dH2','expos2'), format = 'ascii')
 unc_cut2 = np.where((gns2_all['dx2']<max_sig) & (gns2_all['dy2']<max_sig))
-# gns2 = gns2_all[unc_cut2]
+gns2 = gns2_all[unc_cut2]
 gns2 = gns2_all
 gns2_gal = SkyCoord(ra = gns2['ra2'], dec = gns2['Dec2'], 
                     unit = 'degree', frame = 'fk5', equinox = 'J2000',
